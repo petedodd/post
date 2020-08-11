@@ -9,9 +9,20 @@ if(! overwrite ){
 }
 
 ## load data
-## TODO understand!
 TB <- fread(here('../indata/TB_notifications_2020-02-24.csv'))
-TB <- fread('/Users/pjd/Documents/WHO_TBreports/data2018/TB_notifications_2019-02-14.csv')
+## TB1 <- fread('/Users/pjd/Documents/WHO_TBreports/data2018/TB_notifications_2019-02-14.csv')
+
+TBN <- TB[,.(iso3,c_newinc,year,ret_rel,g_whoregion)]       #new and relapse
+## TBN1 <- TB1[,.(iso3,c_newinc,year,ret_rel,g_whoregion)]       #new and relapse
+
+## ggplot(TBN1[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],aes(year,notes)) +
+##   geom_line()
+
+
+ggplot(TBN[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],aes(year,notes)) +
+  geom_line() + geom_line(data=TBN1[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],col=2)
+
+
 
 ## --- notifications -------
 sexunks <- grep("sexunk",names(TB),value=TRUE) #
@@ -47,9 +58,23 @@ TBM[,Time:=paste0(5*(year %/% 5),'-',5*(year %/% 5)+5)]
 TBM[,range(year)]                                     #back to 1980, but lots missing
 TBM <- TBM[!is.na(value)]
 TBM[,range(year)]
-
 TBM[,unique(acat)]
-TBM
+
+## moved here
+TBM[,sum(value)]/1e6                    #75
+TBM[acat=='<15',sum(value)]/1e6         #1.5
+TBM[acat=='15+',sum(value)]/1e6         #7.5
+
+## drop duplicate age categories
+TBM <- TBM[acat!='<15']
+TBM <- TBM[acat!='15+']
+
+TBM[iso3=='ZWE' & year==2012]
+
+## NOTE
+TBM <- TBM[,.(value=sum(value)),by=.(iso3,year,Sex,acat,Time)] #aggregating over type
+
+save(TBM,file=here('../tmpdata/TBM.Rdata'))
 
 ## === India
 
@@ -79,7 +104,8 @@ facz <- seq(from = 1,to=(c1/c2),len=length(yz))
 indc2[year %in% yz,c_newinc := round(facz * c_newinc)]
 
 GP <- GPInd + geom_line(data=indc2,lty=2) +
-  xlab('Year') + ylab('New and relapse notified TB cases') 
+  xlab('Year') + ylab('New and relapse notified TB cases')
+GP
 
 if(plt) ggsave(GP,file=here('../plots/IND0c2.pdf'),w=7,h=5)
 
@@ -87,12 +113,10 @@ if(plt) ggsave(GP,file=here('../plots/IND0c2.pdf'),w=7,h=5)
 TB[iso3=='IND',.(year,c_newinc)]        #check
 TB[iso3=='IND',c_newinc:=indc2$c_newinc]
 
+## c_newinc in TB is now corrected for IND
 ## === end India
 
-TBM[,sum(value)]/1e6                    #75
-TBM[acat=='<15',sum(value)]/1e6         #1.5
-TBM[acat=='15+',sum(value)]/1e6         #7.5
-
+## start making TBN
 ## compute a mean ratio of new:rel using ret_rel
 TBN <- TB[,.(iso3,c_newinc,year,ret_rel,g_whoregion)]       #new and relapse
 summary(TBN)
@@ -102,7 +126,7 @@ ggplot(TBN,aes(ret_rel/c_newinc)) + geom_histogram() + facet_wrap(~g_whoregion)
 
 ## hierarchy of means UNC
 TBN[,rat:=sum(ret_rel,na.rm=TRUE)/sum(c_newinc,na.rm=TRUE),by=iso3] #country mean
-TBN[,rat.sd2:=sqrt(rat*(1-rat)/sum(c_newinc,na.rm=TRUE)),by=iso3] #country mean sample unc
+TBN[,rat.sd2:=sqrt(rat*(1-rat)/sum(c_newinc,na.rm=TRUE)),by=iso3] #country sample unc
 TBN[,rat.sd:=sd(ret_rel/c_newinc,na.rm=TRUE),by=iso3] #country variation
 TBN[,.(rat,rat.sd/rat,rat.sd2/rat)]                   #first more important
 TBN[,rat.sd2:=NULL]                                   #neglect second
@@ -118,20 +142,36 @@ TBN[,c('rat.sd1',"rat.sd2"):=NULL]      #drop temp vars
 TBN
 summary(TBN)
 
+## ## impute cnewinc & restrict to new
+## TBN[,range(year)]
+## tmp <- TBN[year==2017]
+## tmp[,c('c_newinc','ret_rel'):=NA]
+## tmp[,year:=2018]
+## tmp1 <- copy(tmp)
+## tmp1[,year:=2019]
+## tmp <- rbind(tmp,tmp1)
+## TBN <- rbind(TBN,tmp)
 
 ## impute cnewinc & restrict to new
-tmp <- TBN[year==2017]
+TBN[,range(year)]
+tmp <- TBN[year==2018]
 tmp[,c('c_newinc','ret_rel'):=NA]
-tmp[,year:=2018]
-tmp1 <- copy(tmp)
-tmp1[,year:=2019]
-tmp <- rbind(tmp,tmp1)
+tmp[,year:=2019]
+## tmp1 <- copy(tmp)
+## tmp1[,year:=2019]
+## tmp <- rbind(tmp,tmp1)
 TBN <- rbind(TBN,tmp)
 
+## TBN[iso3=='ZWE']
+
+## imputation
 TBN[,imp:=FALSE]
 TBN[is.na(c_newinc),imp:=TRUE]
-TBN[,c_newinc:=as.integer(na_kalman(c_newinc)),by=iso3]
+suppressWarnings({
+  TBN[,c_newinc:=as.integer(na_kalman(c_newinc)),by=iso3]
+})
 TBN[,imputed:=imp]
+
 if(plt){
   for(reg in TBN[,unique(g_whoregion)]){
     GP <- ggplot(TBN[g_whoregion==reg],aes(year,c_newinc,col=imputed))  +
@@ -141,8 +181,8 @@ if(plt){
     ggsave(GP,filename=here(paste0('../plots/notes/IMPcheck_',reg,'.pdf')),w=10,h=10)
   }
 }
-(imps <- TBN[,table(imputed)])
 
+(imps <- TBN[,table(imputed)])
 cat(imps,file=here('texto/imps.txt'))
 
 imps <- TBN[,sum(c_newinc),by=.(imputed)]
@@ -206,12 +246,6 @@ save(TBN,file=here('../tmpdata/TBN.Rdata'))
 
 
 
-## drop duplicate age categories
-TBM <- TBM[acat!='<15']
-TBM <- TBM[acat!='15+']
-
-save(TBM,file=here('../tmpdata/TBM.Rdata'))
-
 ## compare against TBN
 TBN2 <- TBM[,.(anotes=sum(value)),by=.(iso3,year)]
 TBN2[,range(year)]
@@ -231,5 +265,6 @@ GP <- ggplot(tmp,aes(year,fraction,lty=quantity)) +
   geom_line() + ylab('Proportion disaggregated by age') + xlab('Year')+
   theme_classic() + theme(legend.position = c(0.2,0.9)) +
   ggpubr::grids()
+GP
 
 if(plt)ggsave(GP,file=here('../plots/AgeDisagByB.pdf'),w=7,h=5)
