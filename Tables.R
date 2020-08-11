@@ -1,9 +1,9 @@
 ## this will be the figures and tables
 ## see Neat! NOTE
-## rm(list=ls())
+rm(list=ls())
 library(here)
 
-source('~/Documents/Rwork/useful/weighted-stats.R')
+## source('~/Documents/Rwork/useful/weighted-stats.R')
 
 whozg <- c('AFR','AMR','EMR','EUR','SEA','WPR')
 whozt <- c('Africa','The Americas','Eastern Mediterranean','Europe','South-East Asia',
@@ -12,7 +12,6 @@ wrk <- data.table(g_whoregion=whozg,name=whozt)
 
 ftb <- Vectorize(function(x){
   ## formatter according to GTB rounding rules
-  ## https://docs.google.com/document/d/1cu_syknBiF3scAX9d7hEfN0LZwdG40i8ttN6yua2xTQ/edit
   stopifnot (!is.character(x))
   if (!is.na(x)){
     smallpos <- x>0 & x<0.01
@@ -49,15 +48,15 @@ fmtbig(123451000,sf=4)
 
 
 ## ============ Table 1
-load(here('figdat/t1r1.Rdata'))         #Total new tuberculosis cases 1980-2019
-load(here('figdat/t1r2.Rdata'))         #New tuberculosis cases treated 1980-2019
-load(here('figdat/t1r3.Rdata'))         #New tuberculosis cases not treated 1980-2019
+load(here('../figdat/t1r1.Rdata'))         #Total new tuberculosis cases 1980-2019
+load(here('../figdat/t1r2.Rdata'))         #New tuberculosis cases treated 1980-2019
+load(here('../figdat/t1r3.Rdata'))         #New tuberculosis cases not treated 1980-2019
 ## load(here('figdat/t1r4.Rdata')) # = 5 + 6 #Total tuberculosis survivors alive in 2020
-load(here('figdat/t1r5.Rdata'))         #Treated tuberculosis survivors alive in 2020
-load(here('figdat/t1r6.Rdata'))         #Untreated tuberculosis survivors alive in 2020
+load(here('../figdat/t1r5.Rdata'))         #Treated tuberculosis survivors alive in 2020
+load(here('../figdat/t1r6.Rdata'))       #Untreated tuberculosis survivors alive in 2020
 ## load(here('figdat/t1r7.Rdata')) # = 8 + 9 #Life-years post-tuberculosis
-load(here('figdat/t1r8.Rdata'))         #Life-years post-tuberculosis lived by treated
-load(here('figdat/t1r9.Rdata'))         #Life-years post-tuberculosis lived by untreated
+load(here('../figdat/t1r8.Rdata'))         #Life-years post-tuberculosis lived by treated
+load(here('../figdat/t1r9.Rdata'))       #Life-years post-tuberculosis lived by untreated
 
 t1r4 <- merge(t1r5,t1r6,by='g_whoregion')
 t1r7 <- merge(t1r8,t1r9,by='g_whoregion')
@@ -87,8 +86,8 @@ namekey <- data.table(rn=1:9,
                            'Treated tuberculosis survivors alive in 2020',
                            'Untreated tuberculosis survivors alive in 2020',
                            'Life-years lived by tuberculosis survivors 1980-2020',
-                           'Life-years lived by treated tuberculosis survivors 1980-2020',
-                           'Life-years lived by untreated tuberculosis survivors 1980-2020'
+                         'Life-years lived by treated tuberculosis survivors 1980-2020',
+                         'Life-years lived by untreated tuberculosis survivors 1980-2020'
                            ))
 
 t1[,.N,by=quantity]
@@ -107,7 +106,7 @@ T1
 tmp <- T1[,lapply(.SD,fmtbig),.SDcols=2:ncol(T1)]
 T1F <- cbind(quantity=T1[,nm],tmp)
 
-fwrite(T1F,file=here('Neat/figs/table1.csv'))
+fwrite(T1F,file=here('figs/table1.csv'))
 
 ## newversion with unc
 T1.sd <- dcast(t1,nm ~ name,value.var = 'value.sd')
@@ -135,16 +134,16 @@ colnames(BB2) <- names(T1)[-1]
 BB2
 BB2[,7]
 
-write.csv(BB2,file=here('Neat/figs/table1u.csv'))
+write.csv(BB2,file=here('figs/table1u.csv'))
 
 
-## ======== Figure 2
+## ======== Figure 2 ===========
 ## see Results
 
-load(here('N3.Rdata'))
+load(here('../tmpdata/N3.Rdata'))
 if(! 'g_whoregion' %in% names(N3)){
-  load(here('TBN.Rdata'))
-  N3 <- merge(N3,unique(TBN[,.(iso3,g_whoregion)]),by = 'iso3')
+  load(here('../tmpdata/isokey.Rdata'))
+  N3 <- merge(N3,isokey,by = 'iso3')
 }
 
 N3[,range(year)]
@@ -252,4 +251,4 @@ tab2 <- merge(tab2,c4b[,.(g_whoregion,age2=age)])
 setkey(tab2,g_whoregion)
 tab2 <- tab2[c('AFR','AMR','EMR','EUR','SEA','WPR','Global')] #reorder
 
-write.csv(tab2,file=here::here('Neat/figs/table2.csv'))
+write.csv(tab2,file=here::here('figs/table2.csv'))
