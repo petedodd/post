@@ -27,7 +27,7 @@ AA <- AA[,.(value=sum(value,na.rm=TRUE),best=sum(best)),by=.(iso3,acat)]
 AA[,cdr:=value/(best + 1e-9)]           #child CDRs
 ## AA <- AA[,.(cdr=sum(best*cdr)/sum(best+1e-9)),by=.(iso3,acat)] #weighted average
 AA[cdr>1.1,cdr:=1]                      #safety
-AA <- merge(AA,unique(TBM[,.(iso3,g_whoregion)]))
+AA <- merge(AA,isokey)
 AA[,regm:=weighted.mean(x=cdr,w=best,na.rm=TRUE),by=g_whoregion]
 AA[is.na(cdr)|cdr==0,cdr:=regm]
 AA2 <- est[year==2017,.(iso3,ocdr=c_cdr/1e2,ocdr.sd=(c_cdr_hi-c_cdr_lo)/392)]
