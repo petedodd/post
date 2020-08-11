@@ -13,7 +13,7 @@ if(! overwrite ){
 ## load data
 est <- fread(here("../indata/TB_burden_countries_2020-02-24.csv"))
 load(here('../tmpdata/TBN.Rdata'))
-load(here('../tmpdata/isokey.Rdata'))
+
 
 ## start work
 est <- est[,.(iso3,year,e_inc_num,ocdr=c_cdr/1e2,ocdr.sd=(c_cdr_hi-c_cdr_lo)/392)]

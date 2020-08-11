@@ -11,7 +11,6 @@ if(! overwrite ){
 
 ## load data
 load(here('../tmpdata/N3.Rdata'))
-load(here('../tmpdata/isokey.Rdata'))
 load(here('../tmpdata/LA.Rdata'))
 
 

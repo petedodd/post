@@ -7,7 +7,10 @@ if(! overwrite ){
   if(file.exists(here('../tmpdata/N2.Rdata')))stop('Not running as tmpdata/N2.Rdata exists!')
 }
 
+## load
+load(here('../indata/N_simple.Rdata'))           #5 year age groups
 
+## merge
 N <- merge(N,amap,by='AgeGrp',all.x=TRUE)
 
 
