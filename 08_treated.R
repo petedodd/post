@@ -2,17 +2,17 @@
 
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
 
 if(! overwrite ){
-  fn <- here('figdat/t1r8.Rdata')
+  fn <- here('../figdat/t1r8.Rdata')
   if(file.exists(fn))stop('Not running as figdat/t1r8.Rdata exists!')
 }
 
 ## load data
-load(here('tmpdata/N3.Rdata'))
-load(here('tmpdata/isokey.Rdata'))
-load(here('tmpdata/LA.Rdata'))
+load(here('../tmpdata/N3.Rdata'))
+load(here('../tmpdata/isokey.Rdata'))
+load(here('../tmpdata/LA.Rdata'))
 
 
 ## merge with new LA here
@@ -97,7 +97,7 @@ if(cr){
 t1r5 <- rbind(t1r5,tmp)
 t1r5[,quantity:='totnewtx2020']
 
-save(t1r5,file=here('figdat/t1r5.Rdata'))
+save(t1r5,file=here('../figdat/t1r5.Rdata'))
 
 if(cr){
   t1r8 <- N3[,.(value=sum(LYS.t),value.sd=sum(LYS.t.sd)),by=g_whoregion]
@@ -113,5 +113,5 @@ if(cr){
 t1r8 <- rbind(t1r8,tmp)
 t1r8[,quantity:='LYnewtx2020']
 
-save(t1r8,file=here('figdat/t1r8.Rdata'))
+save(t1r8,file=here('../figdat/t1r8.Rdata'))
 

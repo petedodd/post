@@ -4,18 +4,18 @@
 rm(list=ls())
 library(here)
 
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
 
 if(! overwrite ){
-  fn <- here('tmpdata/N3.Rdata')
+  fn <- here('../tmpdata/N3.Rdata')
   if(file.exists(fn))stop('Not running as tmpdata/N3.Rdata exists!')
 }
 
-load(here('tmpdata/TBA.Rdata'))
-load(here('tmpdata/N2.Rdata'))
-load(here('tmpdata/HH.Rdata'))
-load(here('tmpdata/TBOS.Rdata'))
-load(here('tmpdata/TBH.Rdata'))
+load(here('../tmpdata/TBA.Rdata'))
+load(here('../tmpdata/N2.Rdata'))
+load(here('../tmpdata/HH.Rdata'))
+load(here('../tmpdata/TBOS.Rdata'))
+load(here('../tmpdata/TBH.Rdata'))
 
 
 ## merge against TBA and use npc
@@ -87,4 +87,4 @@ N3[,c('acat','age_name'):=NULL]
 N3
 
 
-save(N3,file=here('tmpdata/N3.Rdata'))
+save(N3,file=here('../tmpdata/N3.Rdata'))

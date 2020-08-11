@@ -6,27 +6,28 @@ library(data.table)
 library(ggplot2)
 library(here)
 
-## The repo 'post' should be contained within another folder,
-## where the .here file is. Various other folders will be created
-## at this top level to avoid storing data in the repo.
+## The repo 'post' should be contained within another folder.
+## The here package will identify a git repo as 'here'.
+## Various other folders will be created
+## at this top level (ie above 'here') to avoid storing data in the repo.
 ## 'indata' should be unzipped and placed at this top level also.
 ## 
 ## make directory structure
-if(!file.exists(here('tmpdata'))) dir.create(here('tmpdata'))
-if(!file.exists(here('plots'))) dir.create(here('plots')) #NOTE subfolders
-if(!file.exists(here('texto'))) dir.create(here('texto'))
-if(!file.exists(here('figdat'))) dir.create(here('figdat'))
+if(!file.exists(here('../tmpdata'))) dir.create(here('../tmpdata'))
+if(!file.exists(here('../plots'))) dir.create(here('../plots')) #NOTE subfolders
+if(!file.exists(here('../texto'))) dir.create(here('../texto'))
+if(!file.exists(here('../figdat'))) dir.create(here('../figdat'))
 
 ## subfolders for plots
-if(!file.exists(here('plots/txo'))) dir.create(here('plots/txo'))
-if(!file.exists(here('plots/hiv'))) dir.create(here('plots/hiv'))
-if(!file.exists(here('plots/notes'))) dir.create(here('plots/notes'))
-if(!file.exists(here('plots/inc'))) dir.create(here('plots/inc'))
+if(!file.exists(here('../plots/txo'))) dir.create(here('../plots/txo'))
+if(!file.exists(here('../plots/hiv'))) dir.create(here('../plots/hiv'))
+if(!file.exists(here('../plots/notes'))) dir.create(here('../plots/notes'))
+if(!file.exists(here('../plots/inc'))) dir.create(here('../plots/inc'))
 
 
 ## lifetable data
-load(here('indata/LT.Rdata'))                  #data from UN WPP2019
-load(here('indata/H.Rdata'))           #IHME HIV data
+load(here('../indata/LT.Rdata'))                  #data from UN WPP2019
+load(here('../indata/H.Rdata'))           #IHME HIV data
 
 LT[,iso3:=countrycode::countrycode(LocID,origin='un',destination='iso3c')]
 
@@ -64,10 +65,10 @@ GP <- ggplot(tmp,aes(AgeGrp,qx,col=Sex,group=Sex)) + geom_line() +
   geom_line(aes(AgeGrp,qxe,col=Sex,group=Sex),lty=2) +
   ggtitle('Dashed line use of mx as hazard, AFG 1953')
 GP
-ggsave(GP,filename = here('plots/LTtest1.pdf'))
+ggsave(GP,filename = here('../plots/LTtest1.pdf'))
 
 GP + scale_y_log10()
-ggsave(GP,filename = here('plots/LTtest1log.pdf'))
+ggsave(GP,filename = here('../plots/LTtest1log.pdf'))
 
 ## inspect
 TT[iso3=='AFG' & Sex=='Male' & MidPeriod==1953]
@@ -89,7 +90,7 @@ TT <- TT[order(iso3,Sex,MidPeriod,AgeGrp)]
 ## which countries are we talking about
 allcns <- TT[,unique(iso3)]
 length(allcns)
-cat(allcns,file=here('post/texto/allcnsLT.txt'))
+cat(allcns,file=here('texto/allcnsLT.txt'))
 
 ## smoothing experiment
 mxf <- splinefun(x=agps,
@@ -167,13 +168,13 @@ H[,maxv:=max(val),by=iso3]
 H[maxv>5e-2,unique((iso3))]
 (hivcountries <- H[maxv>5e-2,unique(as.character(iso3))])
 hivcountries <- sort(hivcountries)
-cat(hivcountries,file=here('post/texto/hivcountries.txt'))
+cat(hivcountries,file=here('texto/hivcountries.txt'))
 
 oldies <- ags[18:length(ags)]
 
 ## begin hiv country loop
 plt <- FALSE                            #bother saving plots or not?
-if(plt) file.remove(file.path(here('plots/hiv'), list.files(here('plots/hiv')))) #clear previous
+if(plt) file.remove(file.path(here('../plots/hiv'), list.files(here('../plots/hiv')))) #clear previous
 
 HD <- HEL <- list()
 plt <- FALSE                            #bother saving plots or not?
@@ -209,7 +210,7 @@ for(cn in hivcountries){
   ## plots for checking
   ## LT plot with bump smoothed
   plttitle <- glue(cn) + ', age-specific mortality by calendar time'
-  plfn <- glue(here('plots/hiv'))+'/check_'+cn+'.pdf'
+  plfn <- glue(here('../plots/hiv'))+'/check_'+cn+'.pdf'
   GP <- ggplot(tmpb,aes(MidPeriod,mx,col=Sex,group=Sex)) +
     geom_rect(aes(xmin=yrup,xmax=yrdo,ymin=0,ymax=ymax),alpha=0.1,fill='grey',col=NA)+
     geom_line(aes(y=mx0),linetype=2) +
@@ -235,7 +236,7 @@ for(cn in hivcountries){
 
   ## HIVplot
   plttitle <- glue(cn)
-  plfn <- glue(here('plots/hiv'))+'/hiv_'+cn+'.pdf'
+  plfn <- glue(here('../plots/hiv'))+'/hiv_'+cn+'.pdf'
   GP <- ggplot(HT,aes(year,1e2*val,col=sex_name,group=sex_name)) +
     geom_line(linetype=1) +
     geom_line(data=HE[year<2000],linetype=2) +
@@ -287,7 +288,7 @@ HH
 unccheck <- tail(HH[,unique(iso3)])
 for(cn in unccheck){
   HT <- HH[iso3==cn]
-  plfn <- glue(here('plots/hiv'))+'/uhiv_'+cn+'.pdf'
+  plfn <- glue(here('../plots/hiv'))+'/uhiv_'+cn+'.pdf'
   GP <- ggplot(HT,aes(year,1e2*val,col=sex_name,group=sex_name)) +
     geom_line(linetype=1) +
     geom_ribbon(aes(year,ymin=1e2*lower,ymax=1e2*upper,fill=sex_name),
@@ -299,7 +300,7 @@ for(cn in unccheck){
 }
 
 ## add back to HD
-save(HH,file=here('tmp/HH.Rdata'))          #final HIV data by age/sex & year (all iso3)
+save(HH,file=here('../tmpdata/HH.Rdata'))          #final HIV data by age/sex & year (all iso3)
 
 HD[,c('qx','yrup','yrdo','ymax'):=NULL]
 HD
@@ -502,7 +503,7 @@ LA[,S.h:=min(S.h,S.0),by=.(iso3,year,sex,age)]
 ## LA[,S.h.hi:=min(S.h.hi,S.0.hi),by=.(iso3,year,sex,age)]
 
 ## save to file
-save(LA,file=here('tmpdata/LA.Rdata'))                #
+save(LA,file=here('../tmpdata/LA.Rdata'))                #
 
 ## === checks
 print(LA[iso3=='AFG' & year==2000 & sex=='Male'],n=Inf)

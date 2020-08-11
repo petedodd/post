@@ -1,15 +1,16 @@
 ## TB notification extrapolation
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
+
 if(! overwrite ){
-  fn <- here('tmpdata/TBN.Rdata')
+  fn <- here('../tmpdata/TBN.Rdata')
   if(file.exists(fn))stop('Not running as tmpdata/TBN.Rdata exists!')
 }
 
 ## load data
 ## TODO understand!
-TB <- fread(here('indata/TB_notifications_2020-02-24.csv'))
+TB <- fread(here('../indata/TB_notifications_2020-02-24.csv'))
 TB <- fread('/Users/pjd/Documents/WHO_TBreports/data2018/TB_notifications_2019-02-14.csv')
 
 ## --- notifications -------
@@ -80,7 +81,7 @@ indc2[year %in% yz,c_newinc := round(facz * c_newinc)]
 GP <- GPInd + geom_line(data=indc2,lty=2) +
   xlab('Year') + ylab('New and relapse notified TB cases') 
 
-if(plt) ggsave(GP,file=here('plots/IND0c2.pdf'),w=7,h=5)
+if(plt) ggsave(GP,file=here('../plots/IND0c2.pdf'),w=7,h=5)
 
 ## save in corrected
 TB[iso3=='IND',.(year,c_newinc)]        #check
@@ -137,17 +138,17 @@ if(plt){
       geom_point() + #geom_line() +
       facet_wrap(~iso3,scales='free_y') + theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
-    ggsave(GP,filename=here(paste0('plots/notes/IMPcheck_',reg,'.pdf')),w=10,h=10)
+    ggsave(GP,filename=here(paste0('../plots/notes/IMPcheck_',reg,'.pdf')),w=10,h=10)
   }
 }
 (imps <- TBN[,table(imputed)])
 
-cat(imps,file=here('post/texto/imps.txt'))
+cat(imps,file=here('texto/imps.txt'))
 
 imps <- TBN[,sum(c_newinc),by=.(imputed)]
 (imps[,V1:=1e2*V1/sum(V1)])
 
-fwrite(imps,file=here('post/texto/imps1.csv'))
+fwrite(imps,file=here('texto/imps1.csv'))
 
 
 TBN[,summary(c_newinc)]
@@ -163,7 +164,7 @@ TBN[rat.sd>rat,rat.sd:=rat]               #safety
 NNR <- unique(TBN[,.(iso3,rat,rat.sd)])
 
 
-save(NNR,file=here('tmpdata/NNR.Rdata'))
+save(NNR,file=here('../tmpdata/NNR.Rdata'))
 summary(1e2*NNR$rat)                    #NOTE percent
 
 
@@ -181,7 +182,7 @@ t1r2[,quantity:='totnewtx']
 t1r2[,.(value.sd/value)]
 t1r2[,.(see(value),see(value-value.sd*2),see(value+value.sd*2))]               #
 
-save(t1r2,file=here('figdat/t1r2.Rdata'))
+save(t1r2,file=here('../figdat/t1r2.Rdata'))
 
 
 TBN[,c_newinc0:=c_newinc]
@@ -201,7 +202,7 @@ ggplot(TBN[,.(nanotes=sum(is.na(c_newinc))),by=year],aes(year,nanotes)) +
   geom_line()
 
 
-save(TBN,file=here('tmpdata/TBN.Rdata'))
+save(TBN,file=here('../tmpdata/TBN.Rdata'))
 
 
 
@@ -209,7 +210,7 @@ save(TBN,file=here('tmpdata/TBN.Rdata'))
 TBM <- TBM[acat!='<15']
 TBM <- TBM[acat!='15+']
 
-save(TBM,file=here('tmpdata/TBM.Rdata'))
+save(TBM,file=here('../tmpdata/TBM.Rdata'))
 
 ## compare against TBN
 TBN2 <- TBM[,.(anotes=sum(value)),by=.(iso3,year)]
@@ -231,4 +232,4 @@ GP <- ggplot(tmp,aes(year,fraction,lty=quantity)) +
   theme_classic() + theme(legend.position = c(0.2,0.9)) +
   ggpubr::grids()
 
-if(plt)ggsave(GP,filehere('plots/AgeDisagByB.pdf'),w=7,h=5)
+if(plt)ggsave(GP,file=here('../plots/AgeDisagByB.pdf'),w=7,h=5)

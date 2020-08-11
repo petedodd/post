@@ -1,17 +1,17 @@
 ## untreated survivors
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
 
 if(! overwrite ){
-  fn <- here('figdat/IX.Rdata')
+  fn <- here('../figdat/IX.Rdata')
   if(file.exists(fn))stop('Not running as figdat/IX.Rdata exists!')
 }
 
 ## load data
-load(here('tmpdata/estl.Rdata'))
-load(here('tmpdata/estg.Rdata'))
-load(here('tmp/LA.Rdata'))
+load(here('../tmpdata/estl.Rdata'))
+load(here('../tmpdata/estg.Rdata'))
+load(here('../tmp/LA.Rdata'))
 
 
 ## merge against life tables etc
@@ -109,7 +109,7 @@ tmp <- data.table(g_whoregion='Global',
 t1r1 <- rbind(t1r1,tmp)
 t1r1[,quantity:='totnew']
 
-save(t1r1,file=here('figdat/t1r1.Rdata'))
+save(t1r1,file=here('../figdat/t1r1.Rdata'))
 
 ## check
 estl[g_whoregion=='EMR',.(value=sum(gap),value.sd=Ssum(gap.sd),
@@ -122,7 +122,7 @@ tmp <- data.table(g_whoregion='Global',
 t1r3 <- rbind(t1r3,tmp)
 t1r3[,quantity:='totnotx']
 
-save(t1r3,file=here('figdat/t1r3.Rdata'))
+save(t1r3,file=here('../figdat/t1r3.Rdata'))
 
 if(cr){
   t1r6 <- estl[,.(value=sum(alive),value.sd=sum(alive.sd)),by=g_whoregion] #
@@ -136,7 +136,7 @@ if(cr){
 t1r6 <- rbind(t1r6,tmp)
 t1r6[,quantity:='totnotx2020']
 
-save(t1r6,file=here('figdat/t1r6.Rdata'))
+save(t1r6,file=here('../figdat/t1r6.Rdata'))
 
 if(cr){
   t1r9 <- estl[,.(value=sum(LYS),value.sd=sum(LYS.sd)),by=g_whoregion] #
@@ -150,7 +150,7 @@ if(cr){
 t1r9 <- rbind(t1r9,tmp)
 t1r9[,quantity:='LYnewnotx2020']
 
-save(t1r9,file=here('figdat/t1r9.Rdata'))
+save(t1r9,file=here('../figdat/t1r9.Rdata'))
 
 
 IX <- merge(estl[,.(age=agenow,sex,iso3,alive,g_whoregion)],
@@ -164,6 +164,6 @@ IX$acat <- factor(IX$acat,levels=racts,ordered=TRUE)
 
 tmp <- IX[,.(alive=sum(alive)),by=.(acat,sex,g_whoregion)]
 
-save(IX,file=here('figdat/IX.Rdata'))
+save(IX,file=here('../figdat/IX.Rdata'))
 
 

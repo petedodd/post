@@ -2,16 +2,16 @@
 
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
 
 if(! overwrite ){
-  fn <- here('tmpdata/TBA.Rdata')
+  fn <- here('../tmpdata/TBA.Rdata')
   if(file.exists(fn))stop('Not running as tmpdata/TBA.Rdata exists!')
 }
 
-load(here('tmpdata/TBM.Rdata'))
-load(here('tmpdata/TBN.Rdata'))
-load(here('tmpdata/NSS.Rdata'))
+load(here('../tmpdata/TBM.Rdata'))
+load(here('../tmpdata/TBN.Rdata'))
+load(here('../tmpdata/NSS.Rdata'))
 
 ## ---- disaggregated data
 TBM$acat <- factor(TBM$acat,levels=TBM[,unique(acat)],ordered=TRUE)
@@ -37,7 +37,7 @@ YD <- YD[is.finite(test)]
 YD[,test:=NULL]
 (nodat <- setdiff(TBM[,unique(iso3)],YD[,unique(iso3)])) #8
 
-cat(nodat,file=here('post/texto/notdat.txt'))
+cat(nodat,file=here('texto/notdat.txt'))
 
 
 TBN[,.(mx=max(year),mn=min(year)),by=iso3]
@@ -76,7 +76,7 @@ GP <- ggplot(tmp,aes(acat,notes,col=Sex,group=paste(g_whoregion,Sex))) +
   scale_y_continuous(label=absspace)+
   rot45
 
-if(plt)ggsave(GP,file=here('plots/NotesAgePattern.pdf'),h=7,w=10)
+if(plt)ggsave(GP,file=here('../plots/NotesAgePattern.pdf'),h=7,w=10)
 
 
 TBA <- merge(TBA,NSS,by=c('iso3','Sex','acat','year'),all.x=TRUE) #demography
@@ -93,8 +93,8 @@ GP <- ggplot(tmp,aes(acat,notes,col=Sex,group=paste(g_whoregion,Sex))) +
   xlab('Age category') + ylab('Per capita TB notifications') +
   facet_wrap(~g_whoregion)
 
-if(plt)ggsave(GP,filename=here('plots/npc.pdf'))
+if(plt)ggsave(GP,filename=here('../plots/npc.pdf'))
 
 TBA
 
-save(TBA,file=here('tmpdata/TBA.Rdata'))   #version with number in age group, popn, npc
+save(TBA,file=here('../tmpdata/TBA.Rdata'))   #version with number in age group, popn, npc

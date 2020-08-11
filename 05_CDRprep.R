@@ -4,18 +4,18 @@
 ## TB treatment outcomes
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
 
 if(! overwrite ){
-  fn <- here('tmpdata/RRcdr.Rdata')
+  fn <- here('../tmpdata/RRcdr.Rdata')
   if(file.exists(fn))stop('Not running as tmpdata/RRcdr.Rdata exists!')
 }
 
 ## load data
-load(here('tmpdata/TBM.Rdata'))
-est <- fread(here('indata/TB_burden_countries_2020-02-24.csv'))
+load(here('../tmpdata/TBM.Rdata'))
+est <- fread(here('../indata/TB_burden_countries_2020-02-24.csv'))
 ## age/sex splits
-AA <- fread(here("indata/TB_burden_age_sex_2020-02-24.csv"))
+AA <- fread(here("../indata/TB_burden_age_sex_2020-02-24.csv"))
 
 ## calculating
 AA <- AA[age_group %in% c('0-4','5-14'),.(iso3,acat=age_group,sex,best)]
@@ -74,7 +74,7 @@ RRcdr[RR514<1,RR514:=1]
 
 ## averages for missed or odd
 (missed <- setdiff(AA$iso3,RRcdr$iso3))
-cat(missed,file=here::here('post/texto/RRnone.txt'))
+cat(missed,file=here::here('texto/RRnone.txt'))
 missed <- unique(AA[iso3 %in% missed,.(iso3,g_whoregion)])
 RRcdr <- merge(RRcdr,unique(AA[,.(iso3,g_whoregion)]),
                by='iso3',all.x=TRUE,all.y=FALSE)
@@ -89,9 +89,9 @@ RRcdr[RRu5>quantile(RRu5,.975)]
 RRcdr[RR514>quantile(RR514,.975)]
 
 (missed <- RRcdr[RRu5>quantile(RRu5,.975),unique(iso3)])
-cat(missed,file=here::here('post/texto/RRhiu5.txt'))
+cat(missed,file=here::here('texto/RRhiu5.txt'))
 (missed <- RRcdr[RR514>quantile(RR514,.975),unique(iso3)])
-cat(missed,file=here::here('post/texto/RRhi514.txt'))
+cat(missed,file=here::here('texto/RRhi514.txt'))
 RRcdr[RRu5>quantile(RRu5,.975),RRu5:=RRu5a]
 RRcdr[RR514>quantile(RR514,.975),RR514:=RR514a]
 
@@ -99,4 +99,4 @@ RRcdr[,c('g_whoregion','RRu5a','RR514a'):=NULL]
 
 summary(RRcdr)
 
-save(RRcdr,file=here::here('tmpdata/RRcdr.Rdata'))
+save(RRcdr,file=here::here('../tmpdata/RRcdr.Rdata'))

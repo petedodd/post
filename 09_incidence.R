@@ -3,17 +3,17 @@
 
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
 
 if(! overwrite ){
-  fn <- here('tmpdata/estg.Rdata')
+  fn <- here('../tmpdata/estg.Rdata')
   if(file.exists(fn))stop('Not running as tmpdata/estg.Rdata exists!')
 }
 
 ## load data
-est <- fread(here("indata/TB_burden_countries_2020-02-24.csv"))
-load(here('tmpdata/TBN.Rdata'))
-load(here('tmpdata/isokey.Rdata'))
+est <- fread(here("../indata/TB_burden_countries_2020-02-24.csv"))
+load(here('../tmpdata/TBN.Rdata'))
+load(here('../tmpdata/isokey.Rdata'))
 
 ## start work
 est <- est[,.(iso3,year,e_inc_num,ocdr=c_cdr/1e2,ocdr.sd=(c_cdr_hi-c_cdr_lo)/392)]
@@ -34,7 +34,7 @@ TBN[is.finite(ratio),qplot(ratio)]
 TBN[is.finite(ratio) & ratio > 10 & year<2000]
 (badfac <- TBN[is.finite(ratio) & ratio > 5 & year<2000,unique(iso3)])
 
-cat(badfac,file=here('post/texto/badfac.txt'))
+cat(badfac,file=here('texto/badfac.txt'))
 
 
 TBN[iso3 %in% badfac,ratio:=1] #cap
@@ -71,7 +71,7 @@ if(plt){
       geom_point() + #geom_line() +
       facet_wrap(~iso3,scales='free_y') + theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
-    ggsave(GP,filename=here::here(paste0('plots/inc/incIMPcheck_',reg,'.pdf')))
+    ggsave(GP,filename=here::here(paste0('../plots/inc/incIMPcheck_',reg,'.pdf')))
   }
 }
 
@@ -97,7 +97,7 @@ GP <- ggplot(tmpi,aes(year,incnum)) +
   theme_classic() + ggpubr::grids()
 GP
 
-if(plt)ggsave(GP,filename=here(paste0('plots/inc/incIMPcheck_Global.pdf')),w=7,h=5)
+if(plt)ggsave(GP,filename=here(paste0('../plots/inc/incIMPcheck_Global.pdf')),w=7,h=5)
 
 est <- merge(est,TBN[,.(iso3,year,c_newinc)],by=c('iso3','year'))
 est[,gap:=e_inc_num - c_newinc]
@@ -126,11 +126,11 @@ tmp                                     #TODO check new vs new + rel
 GP <- ggplot(tmp,aes(year,gap)) + geom_line() +
   ylab('Undiagnosed TB incidence in millions')
 
-if(plt)ggsave(GP,filename=here::here('plots/Gap.pdf'),w=7,h=5)
+if(plt)ggsave(GP,filename=here::here('../plots/Gap.pdf'),w=7,h=5)
 
 GP <- GP + geom_line(aes(year,gap2),col=2)    #TODO recheck
 GP
-if(plt)ggsave(GP,filename=here::here('plots/GapCheck.pdf'),w=7,h=5) #think 1 lacks IND corr
+if(plt)ggsave(GP,filename=here::here('../plots/GapCheck.pdf'),w=7,h=5) #think 1 lacks IND corr
 
 
 tmpi <- merge(tmpi,est[,.(gap=sum(gap)/1e6),by=year],by='year')
@@ -144,7 +144,7 @@ GP2 <- ggplot(tmpim,aes(year,value,lty=variable)) + geom_line() +
   theme(legend.position = c(0.1,0.9)) + xlab('Year')
 GP2
 
-if(plt)ggsave(GP2,file=here::here('plots/Gap2.pdf'),w=7,h=5)
+if(plt)ggsave(GP2,file=here::here('../plots/Gap2.pdf'),w=7,h=5)
 
 
 tmpi
@@ -154,7 +154,7 @@ GP3 <- ggplot(tmpi,aes(year,(1-gap/incnum))) + geom_line() +
   theme_classic() + ggpubr::grids()
 GP3
 
-if(plt)ggsave(GP3,file=here::here('plots/Gap2cdr.pdf'),w=7,h=5)
+if(plt)ggsave(GP3,file=here::here('../plots/Gap2cdr.pdf'),w=7,h=5)
 
 
 ## ball park checks
@@ -163,4 +163,4 @@ est[year>1985,sum(gap)/1e6]
 5*40                                    #gap x years
 5*40/2                                  #survival x gap x years
 
-save(est,file=here::here('tmpdata/estg.Rdata'))
+save(est,file=here::here('../tmpdata/estg.Rdata'))

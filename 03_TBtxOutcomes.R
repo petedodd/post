@@ -1,16 +1,17 @@
 ## TB treatment outcomes
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
+
 if(! overwrite ){
-  fn <- here('tmpdata/TBOS.Rdata')
+  fn <- here('../tmpdata/TBOS.Rdata')
   if(file.exists(fn))stop('Not running as tmpdata/TBOS.Rdata exists!')
 }
 
 
 ## load data
 ## WHO TB outcome data
-TBO <- fread(here('indata/TB_outcomes_2020-02-24.csv'))
+TBO <- fread(here('../indata/TB_outcomes_2020-02-24.csv'))
 
 ## treatment outcomes=================
 names(TBO)
@@ -26,7 +27,7 @@ if(plt){
       geom_line(aes(year,new_snep_died/new_snep_coh,group=iso3),col=2) +
       geom_line(aes(year,new_snep_def/new_snep_coh,group=iso3),col=2,lty=2) +
       facet_wrap(~iso3)
-    ggsave(here::here(paste0('plots/txo/Txo_',rg,'.pdf')))
+    ggsave(here::here(paste0('../plots/txo/Txo_',rg,'.pdf')))
   }
 }
 
@@ -46,7 +47,7 @@ TBOS[,qplot(pd)]
 TBOS[pd>.3]
 (tbonacns <- TBOS[is.na(pd),iso3])
 
-cat(tbonacns,file=here::here('post/texto/tbonacns.txt'))
+cat(tbonacns,file=here::here('texto/tbonacns.txt'))
 
 TBORS <- TBOS[is.finite(pd),.(pd=mean(pd),
                               pd.sd1=mean(pd.sd^2),pd.sd2=var(pd)),
@@ -62,5 +63,5 @@ TBOS
 
 TBOS[Nc==0,.(iso3,pd,g_whoregion)]
 
-save(TBOS,file=here('tmpdata/TBOS.Rdata'))
+save(TBOS,file=here('../tmpdata/TBOS.Rdata'))
 ## end tx outcomes ======

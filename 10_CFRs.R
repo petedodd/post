@@ -2,18 +2,18 @@
 
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
 
 if(! overwrite ){
-  fn <- here('tmpdata/estl.Rdata')
+  fn <- here('../tmpdata/estl.Rdata')
   if(file.exists(fn))stop('Not running as tmpdata/N3.Rdata exists!')
 }
 
 ## load data
-load(here('tmpdata/estg.Rdata'))
-load(here('tmpdata/RRcdr.Rdata'))
-load(here('tmpdata/N3.Rdata'))
-load(here('tmpdata/TBH.Rdata'))
+load(here('../tmpdata/estg.Rdata'))
+load(here('../tmpdata/RRcdr.Rdata'))
+load(here('../tmpdata/N3.Rdata'))
+load(here('../tmpdata/TBH.Rdata'))
 
 
 ## NOTE this version TBN c_newinc is just new. Check OK with gap
@@ -189,4 +189,4 @@ summary(estl[,.(gapls.sd)])
 ## estl[acat=='5-14',gapls.0.sd:=sqrt(gapl.0^2 * ccfr.sd^2 + gapl.0.sd^2 * ccfr.sd^2 + gapl.0.sd^2 * (1-ccfr)^2)]
 ## estl[,gapls.h.sd:=sqrt(gapl.h.sd^2 * (1-hfr)^2 + gapl.h.sd^2 * hfr.sd^2 + gapl.h^2 * hfr.sd^2)]
 
-save(estl,file=here('tmpdata/estl.Rdata'))
+save(estl,file=here('../tmpdata/estl.Rdata'))

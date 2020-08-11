@@ -1,10 +1,10 @@
 ## interpolation of demography
 rm(list=ls())
 library(here)
-source(here('Neat/0_utilities.R'))
+source(here('00_utilities.R'))
 
 if(! overwrite ){
-  if(file.exists(here('tmpdata/N2.Rdata')))stop('Not running as tmpdata/N2.Rdata exists!')
+  if(file.exists(here('../tmpdata/N2.Rdata')))stop('Not running as tmpdata/N2.Rdata exists!')
 }
 
 
@@ -20,7 +20,7 @@ NSS[,acat:=acats]
 NSS[,year:=Year]
 NSS[,c('acats','variable','Year'):=NULL]
 
-save(NSS,file=here('tmpdata/NSS.Rdata'))
+save(NSS,file=here('../tmpdata/NSS.Rdata'))
 
 
 N <- N[Year %in% 1980:2019]
@@ -47,7 +47,7 @@ GP <- ggplot(utmp,aes(amid,PopMale)) +
   xlab('Age') + ylab('Population')+
   theme_classic()
 
-if(plt)ggsave(GP,file=here('plots/interp_5yr.pdf'),w=5,h=5)
+if(plt)ggsave(GP,file=here('../plots/interp_5yr.pdf'),w=5,h=5)
 
 
 ## linear extrapolation of population across 5 year age groups
@@ -69,7 +69,7 @@ N2[,c('PMa','PFa','PTa'):=list(PopMale*pm,PopFemale*pf,PopTotal*pt)]
 GP <- ggplot(N2[iso3=="ZWE" & Year==1980,.(age,PMa)],aes(age,PMa)) +
   geom_point() + geom_line() + xlab('Age') + ylab('Population') + theme_classic()
 
-if(plt)ggsave(GP,file=here('plots/interp_1yr.pdf'),w=5,h=5)
+if(plt)ggsave(GP,file=here('../plots/interp_1yr.pdf'),w=5,h=5)
 
 ## check
 N2[,sum(PTa)]/1e6                       #242
@@ -80,4 +80,4 @@ N2[,sum(PopTotal)/5]/1e6                #242
 N2 <- N2[,.(iso3,Year,age,acat=acats,PMa,PFa,PTa)]
 N2 <- N2[,.(iso3,Year,age,acat,PMa,PFa,PTa)]
 
-save(N2,file=here('tmpdata/N2.Rdata'))
+save(N2,file=here('../tmpdata/N2.Rdata'))
