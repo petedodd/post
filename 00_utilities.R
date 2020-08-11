@@ -38,6 +38,7 @@ if(file.exists(fn)){
   load(here('../tmpdata/amap.Rdata'))
   load(here('../tmpdata/lamap.Rdata'))
   load(here('../tmpdata/isokey.Rdata'))
+  hivcountries <- scan(here('../tmpdata/hivcountries.txt'),what='character')
 } else {
   load(here('../indata/N_simple.Rdata'))           #5 year age groups
   ## make an age map between 5year ages and TB ages

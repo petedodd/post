@@ -71,7 +71,8 @@ if(plt){
       geom_point() + #geom_line() +
       facet_wrap(~iso3,scales='free_y') + theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
-    ggsave(GP,filename=here::here(paste0('../plots/inc/incIMPcheck_',reg,'.pdf')))
+    ggsave(GP,filename=here::here(paste0('../plots/inc/incIMPcheck_',reg,'.pdf')),
+           w=9,h=7)
   }
 }
 
@@ -125,11 +126,13 @@ tmp                                     #TODO check new vs new + rel
 
 GP <- ggplot(tmp,aes(year,gap)) + geom_line() +
   ylab('Undiagnosed TB incidence in millions')
+GP
 
 if(plt)ggsave(GP,filename=here::here('../plots/Gap.pdf'),w=7,h=5)
 
 GP <- GP + geom_line(aes(year,gap2),col=2)    #TODO recheck
 GP
+
 if(plt)ggsave(GP,filename=here::here('../plots/GapCheck.pdf'),w=7,h=5) #think 1 lacks IND corr
 
 
@@ -156,11 +159,5 @@ GP3
 
 if(plt)ggsave(GP3,file=here::here('../plots/Gap2cdr.pdf'),w=7,h=5)
 
-
-## ball park checks
-est[,sum(gap)/1e6]                      #200
-est[year>1985,sum(gap)/1e6]
-5*40                                    #gap x years
-5*40/2                                  #survival x gap x years
 
 save(est,file=here::here('../tmpdata/estg.Rdata'))

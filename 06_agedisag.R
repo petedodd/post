@@ -17,13 +17,13 @@ load(here('../tmpdata/NSS.Rdata'))
 TBM$acat <- factor(TBM$acat,levels=TBM[,unique(acat)],ordered=TRUE)
 
 ## smooth 
-TBM <- TBM[,.(value=sum(value)),by=.(iso3,g_whoregion,year,Sex,acat)] #NOTE agggregating
-
+TBM <- TBM[,.(value=sum(value)),by=.(iso3,year,Sex,acat)] #NOTE agggregating by year
+TBM <- merge(TBM,isokey,by='iso3')
 
 ggplot(TBM[iso3=='ZWE' & year == 2015],
        aes(acat,value,col=Sex,group=Sex)) + geom_line()
 
-TBM[,ncats:=.N,by=.(iso3,year)]
+TBM[,ncats:=.N,by=.(iso3,year)]         #should be 16
 
 ## make averaged pattern by age and sex
 YD <- TBM[ncats==16,.(iso3,g_whoregion,Sex,acat,value)]
@@ -44,7 +44,6 @@ TBN[,.(mx=max(year),mn=min(year)),by=iso3]
 YD                                      #split by TB age categories
 
 ## TBA
-## TBA <- merge(TBN,YD,by='iso3',all.y=TRUE,allow.cartesian = TRUE)
 TBA <- YD[rep(1:nrow(YD),each=length(1980:2019))]
 TBA[,year:=rep(1980:2019,nrow(YD))]
 
@@ -75,6 +74,7 @@ GP <- ggplot(tmp,aes(acat,notes,col=Sex,group=paste(g_whoregion,Sex))) +
   xlab('Age category') + ylab('Cumulative TB notifications') +
   scale_y_continuous(label=absspace)+
   rot45
+GP
 
 if(plt)ggsave(GP,file=here('../plots/NotesAgePattern.pdf'),h=7,w=10)
 
@@ -91,10 +91,12 @@ tmp <- TBA[,.(notes=mean(npc,na.rm=TRUE)),by=.(g_whoregion,Sex,acat)]
 GP <- ggplot(tmp,aes(acat,notes,col=Sex,group=paste(g_whoregion,Sex))) +
   geom_line() +
   xlab('Age category') + ylab('Per capita TB notifications') +
-  facet_wrap(~g_whoregion)
+  facet_wrap(~g_whoregion) + rot45
+GP
 
 if(plt)ggsave(GP,filename=here('../plots/npc.pdf'))
 
 TBA
 
-save(TBA,file=here('../tmpdata/TBA.Rdata'))   #version with number in age group, popn, npc
+##version with number in age group, popn, npc
+save(TBA,file=here('../tmpdata/TBA.Rdata'))

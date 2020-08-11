@@ -11,12 +11,13 @@ if(! overwrite ){
 ## load data
 load(here('../tmpdata/estl.Rdata'))
 load(here('../tmpdata/estg.Rdata'))
-load(here('../tmp/LA.Rdata'))
+load(here('../tmpdata/LA.Rdata'))
 
 
 ## merge against life tables etc
 estl <- merge(estl,LA,by=c('iso3','year','age','sex'),all.x = TRUE,all.y = FALSE)
 estl[,range(year)]
+estl
 
 ## calcualtions
 estl[,alive.0:=S.0*gapls.0]
@@ -102,14 +103,17 @@ estl
 t1r1 <- est[,.(value=sum(e_inc_num),
                value.sd=Ssum((ocdr.sd/ocdr)*e_inc_num)),
             by=g_whoregion] #NOTE this is new
-
 tmp <- data.table(g_whoregion='Global',
                   value=t1r1[,sum(value)],
                   value.sd=t1r1[,Ssum(value.sd)])
 t1r1 <- rbind(t1r1,tmp)
 t1r1[,quantity:='totnew']
 
-save(t1r1,file=here('../figdat/t1r1.Rdata'))
+t1r1[,.(value.sd/value,value-value.sd,value+value.sd)]
+
+
+
+save(t1r1,file=here('../figdat/t1r1.Rdata')) #new total
 
 ## check
 estl[g_whoregion=='EMR',.(value=sum(gap),value.sd=Ssum(gap.sd),
@@ -122,7 +126,9 @@ tmp <- data.table(g_whoregion='Global',
 t1r3 <- rbind(t1r3,tmp)
 t1r3[,quantity:='totnotx']
 
-save(t1r3,file=here('../figdat/t1r3.Rdata'))
+t1r3[,.(value.sd/value,value-value.sd,value+value.sd)]
+
+save(t1r3,file=here('../figdat/t1r3.Rdata')) #new untreated
 
 if(cr){
   t1r6 <- estl[,.(value=sum(alive),value.sd=sum(alive.sd)),by=g_whoregion] #
@@ -136,7 +142,9 @@ if(cr){
 t1r6 <- rbind(t1r6,tmp)
 t1r6[,quantity:='totnotx2020']
 
-save(t1r6,file=here('../figdat/t1r6.Rdata'))
+t1r6[,.(value.sd/value,value-value.sd,value+value.sd)]
+
+save(t1r6,file=here('../figdat/t1r6.Rdata')) #untreated survivors
 
 if(cr){
   t1r9 <- estl[,.(value=sum(LYS),value.sd=sum(LYS.sd)),by=g_whoregion] #
@@ -150,13 +158,14 @@ if(cr){
 t1r9 <- rbind(t1r9,tmp)
 t1r9[,quantity:='LYnewnotx2020']
 
-save(t1r9,file=here('../figdat/t1r9.Rdata'))
+t1r9[,.(value.sd/value,value-value.sd,value+value.sd)]
+
+save(t1r9,file=here('../figdat/t1r9.Rdata')) #life-years untreated
 
 
 IX <- merge(estl[,.(age=agenow,sex,iso3,alive,g_whoregion)],
             lamap[,.(age,acat=acats)],
             by='age',all.x=TRUE,all.y=FALSE)
-
 IX <- IX[!is.na(acat)]
 IX
 

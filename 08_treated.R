@@ -96,6 +96,8 @@ if(cr){
 t1r5 <- rbind(t1r5,tmp)
 t1r5[,quantity:='totnewtx2020']
 
+t1r5[,.(value.sd/value,value-value.sd,value+value.sd)]
+
 save(t1r5,file=here('../figdat/t1r5.Rdata'))
 
 if(cr){
@@ -111,6 +113,8 @@ if(cr){
 }
 t1r8 <- rbind(t1r8,tmp)
 t1r8[,quantity:='LYnewtx2020']
+
+t1r8[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 save(t1r8,file=here('../figdat/t1r8.Rdata'))
 

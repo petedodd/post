@@ -94,8 +94,6 @@ ncts <- length(estl[,unique(age)])
 estl[bad==TRUE,gapl:=gap/ncts]          #safety
 
 
-
-
 ## gap test
 N3[year==2017,sum(value)]/1e6
 estl[year==2017,sum(gapl)]/1e6
