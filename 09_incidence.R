@@ -45,7 +45,6 @@ TBN[iso3 %in% badfac,ratio:=1] #cap
 
 
 est2000 <- est[year==2000]
-
 TBNx <- merge(est2000[,.(iso3,e_inc_num)],
               TBN[,.(iso3,year,ratio)],by=c('iso3'),all.y=TRUE) #
 TBNx[,e_inc_num2:=e_inc_num * ratio]                            #NOTE
@@ -95,20 +94,23 @@ tmpi <- est[,.(incnum=sum(e_inc_num)/1e6),by=.(year)]
 GP <- ggplot(tmpi,aes(year,incnum)) +
   geom_line() + ylab('Total estimated TB incidence') +
   xlab('Year') + 
-  theme_classic() + ggpubr::grids()
+  theme_classic() + ggpubr::grids() + expand_limits(y=0)
 GP
 
 if(plt)ggsave(GP,filename=here(paste0('../plots/inc/incIMPcheck_Global.pdf')),w=7,h=5)
 
-est <- merge(est,TBN[,.(iso3,year,c_newinc)],by=c('iso3','year'))
-est[,gap:=e_inc_num - c_newinc]
+## NOTE c_newinc in TBN is corrected for IND & restricted to new
+## c_newinc0 corrects for IND, but includes relapse
+est <- merge(est,TBN[,.(iso3,year,c_newinc,c_newinc0,rat)],by=c('iso3','year'))
+est[,gap:=e_inc_num - c_newinc0]         #new and relapse gap
 est[gap< 0]
 est[gap<0,summary(gap)]                 #mainly rounding
 est[gap< -1e3]                          #except these
 est[gap<0,gap:=0]
 
 ## CDRs
-est[is.na(ocdr),ocdr:=c_newinc/e_inc_num] #TODO think dropped relapse jj
+est[iso3=='IND',ocdr:=c_newinc0/e_inc_num] #NOTE correcting IND CDR 
+est[is.na(ocdr),ocdr:=c_newinc0/e_inc_num] #TODO think dropped relapse jj
 est[,tmp:=max(ocdr.sd,na.rm=TRUE),by=iso3] #use biggest sd
 est[!is.finite(ocdr.sd),ocdr.sd:=tmp] #fill in
 est[,tmp:=NULL]
@@ -120,17 +122,17 @@ est[ocdr==0,ocdr:=0.5]                   # rounding
 est[,gap.sd:=gap * ocdr.sd / ocdr]
 est[,summary(gap.sd/gap)]
 
-tmp <- est[,.(gap=sum(gap)/1e6,gap2=sum(c_newinc*(1/ocdr-1))/1e6),by=year]
+## tmp <- est[iso3!='IND',.(gap=sum(gap)/1e6,gap2=sum(c_newinc0*(1/ocdr-1))/1e6),by=year]
+tmp <- est[,.(gap=sum(gap)/1e6,gap2=sum(c_newinc0*(1/ocdr-1))/1e6),by=year]
 tmp                                     #TODO check new vs new + rel
 
-
 GP <- ggplot(tmp,aes(year,gap)) + geom_line() +
-  ylab('Undiagnosed TB incidence in millions') + expand_limits(y=0) +
+  ylab('Undiagnosed TB incidence in millions') + expand_limits(y=0)
 GP
 
 if(plt)ggsave(GP,filename=here::here('../plots/Gap.pdf'),w=7,h=5)
 
-GP <- GP + geom_line(aes(year,gap2),col=2)    #TODO recheck
+GP <- GP + geom_line(aes(year,gap2),col=2)
 GP
 
 if(plt)ggsave(GP,filename=here::here('../plots/GapCheck.pdf'),w=7,h=5) #think 1 lacks IND corr
