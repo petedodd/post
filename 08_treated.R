@@ -75,8 +75,11 @@ N3[!is.finite(alive.t.sd)]
 
 N3 <- merge(N3,lamap[,.(age,acat=acats)],by='age',all.x=TRUE)
 
-## figdat
+## ============  figdat =================
 N3 <- merge(N3,isokey,by = 'iso3')
+
+
+## === for table 1
 
 if(cr){
   t1r5 <- N3[,.(value=sum(alive.t),
@@ -98,7 +101,7 @@ t1r5[,quantity:='totnewtx2020']
 
 t1r5[,.(value.sd/value,value-value.sd,value+value.sd)]
 
-save(t1r5,file=here('../figdat/t1r5.Rdata'))
+save(t1r5,file=here('../figdat/t1r5.Rdata')) #treated survivors
 
 if(cr){
   t1r8 <- N3[,.(value=sum(LYS.t),value.sd=sum(LYS.t.sd)),by=g_whoregion]
@@ -116,5 +119,68 @@ t1r8[,quantity:='LYnewtx2020']
 
 t1r8[,.(value.sd/value,value-value.sd,value+value.sd)]
 
-save(t1r8,file=here('../figdat/t1r8.Rdata'))
+save(t1r8,file=here('../figdat/t1r8.Rdata')) #lifeyears among treated
 
+## === for table 2
+
+
+if(! 'agenow' %in% names(N3)) N3[,agenow:=age + 2020-year]
+
+## within 5 years
+c1 <- rbind(N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
+            data.table(g_whoregion='Global',
+                       N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
+
+tmp <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion,sex)]
+tmp[,tot:=sum(total),by=g_whoregion]
+tmp[,pc:=1e2*total/tot]
+tmp <- tmp[sex=='Male']
+c2 <- rbind(tmp[,.(g_whoregion,pc)],
+            data.table(g_whoregion='Global',pc=1e2*N3[year>=2015 & sex=='Male',
+                                               sum(alive)]/
+                                              N3[year>=2015,sum(alive)])
+            )
+
+tmp <- N3[year>=2015 & agenow<15,.(total=sum(alive)),by=.(g_whoregion)]
+tmp2 <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion)]
+tmp <- merge(tmp,tmp2,by='g_whoregion')
+tmp[,pck:=1e2*total.x/total.y]
+c4 <- rbind(tmp[,.(g_whoregion,pck)],
+            data.table(g_whoregion='Global',pck=1e2*N3[year>=2015 & agenow<15,
+                                               sum(alive)]/
+                                              N3[year>=2015,sum(alive)])
+            )
+
+## less than 2 years
+c1b <- rbind(N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
+            data.table(g_whoregion='Global',
+                       N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
+
+
+
+tmp <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion,sex)]
+tmp[,tot:=sum(total),by=g_whoregion]
+tmp[,pc:=1e2*total/tot]
+tmp <- tmp[sex=='Male']
+c2b <- rbind(tmp[,.(g_whoregion,pc)],
+            data.table(g_whoregion='Global',pc=1e2*N3[year>=2018 & sex=='Male',
+                                               sum(alive)]/
+                                              N3[year>=2018,sum(alive)])
+            )
+
+
+
+tmp <- N3[year>=2018 & agenow<15,.(total=sum(alive)),by=.(g_whoregion)]
+tmp2 <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion)]
+tmp <- merge(tmp,tmp2,by='g_whoregion')
+tmp[,pck:=1e2*total.x/total.y]
+c4b <- rbind(tmp[,.(g_whoregion,pck)],
+            data.table(g_whoregion='Global',pck=1e2*N3[year>=2018 & agenow<15,
+                                               sum(alive)]/
+                                              N3[year>=2018,sum(alive)])
+            )
+
+## save data
+save(c1,file=here("../figdat/c1.Rdata")); save(c1b,file=here("../figdat/c1b.Rdata"))
+save(c2,file=here("../figdat/c2.Rdata")); save(c2b,file=here("../figdat/c2b.Rdata"))
+save(c4,file=here("../figdat/c4.Rdata")); save(c4b,file=here("../figdat/c4b.Rdata"))

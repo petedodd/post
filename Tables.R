@@ -1,9 +1,7 @@
-## this will be the figures and tables
-## see Neat! NOTE
+## this will be the tables
 rm(list=ls())
 library(here)
 
-## source('~/Documents/Rwork/useful/weighted-stats.R')
 
 whozg <- c('AFR','AMR','EMR','EUR','SEA','WPR')
 whozt <- c('Africa','The Americas','Eastern Mediterranean','Europe','South-East Asia',
@@ -137,93 +135,11 @@ BB2[,7]
 write.csv(BB2,file=here('figs/table1u.csv'))
 
 
-## ======== Figure 2 ===========
+## ======== Table 2 ===========
 ## see Results
-
-load(here('../tmpdata/N3.Rdata'))
-if(! 'g_whoregion' %in% names(N3)){
-  load(here('../tmpdata/isokey.Rdata'))
-  N3 <- merge(N3,isokey,by = 'iso3')
-}
-
-N3[,range(year)]
-
-if(! 'agenow' %in% names(N3)) N3[,agenow:=age + 2020-year]
-
-## within 5 years
-c1 <- rbind(N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
-            data.table(g_whoregion='Global',
-                       N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
-
-tmp <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion,sex)]
-tmp[,tot:=sum(total),by=g_whoregion]
-tmp[,pc:=1e2*total/tot]
-tmp <- tmp[sex=='Male']
-c2 <- rbind(tmp[,.(g_whoregion,pc)],
-            data.table(g_whoregion='Global',pc=1e2*N3[year>=2015 & sex=='Male',
-                                               sum(alive)]/
-                                              N3[year>=2015,sum(alive)])
-            )
-
-tmp <- N3[year>=2015 & agenow<15,.(total=sum(alive)),by=.(g_whoregion)]
-tmp2 <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion)]
-tmp <- merge(tmp,tmp2,by='g_whoregion')
-tmp[,pck:=1e2*total.x/total.y]
-c4 <- rbind(tmp[,.(g_whoregion,pck)],
-            data.table(g_whoregion='Global',pck=1e2*N3[year>=2015 & agenow<15,
-                                               sum(alive)]/
-                                              N3[year>=2015,sum(alive)])
-            )
-
-
-## tmp <- N3[year>=2015,.(wm=weighted.mean(agenow,w=alive)),by=.(g_whoregion)]
-## tmp2 <- N3[year>=2015,.(wsd=weighted.sd(agenow,w=alive)),by=.(g_whoregion)]
-## tmp <- merge(tmp,tmp2,by='g_whoregion')
-
-## c4 <- rbind(tmp,
-##             data.table(g_whoregion='Global',
-##                        wm=N3[year>=2015,weighted.mean(agenow,w=alive)],
-##                        wsd=N3[year>=2015,weighted.sd(agenow,w=alive)])
-##             )
-
-## less than 2 years
-c1b <- rbind(N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
-            data.table(g_whoregion='Global',
-                       N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
-
-
-
-tmp <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion,sex)]
-tmp[,tot:=sum(total),by=g_whoregion]
-tmp[,pc:=1e2*total/tot]
-tmp <- tmp[sex=='Male']
-c2b <- rbind(tmp[,.(g_whoregion,pc)],
-            data.table(g_whoregion='Global',pc=1e2*N3[year>=2018 & sex=='Male',
-                                               sum(alive)]/
-                                              N3[year>=2018,sum(alive)])
-            )
-
-
-## tmp <- N3[year>=2018,.(wm=weighted.mean(agenow,w=alive)),by=.(g_whoregion)]
-## tmp2 <- N3[year>=2018,.(wsd=weighted.sd(agenow,w=alive)),by=.(g_whoregion)]
-## tmp <- merge(tmp,tmp2,by='g_whoregion')
-
-## c4b <- rbind(tmp,
-##             data.table(g_whoregion='Global',
-##                        wm=N3[year>=2018,weighted.mean(agenow,w=alive)],
-##                        wsd=N3[year>=2018,weighted.sd(agenow,w=alive)])
-##             )
-
-
-tmp <- N3[year>=2018 & agenow<15,.(total=sum(alive)),by=.(g_whoregion)]
-tmp2 <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion)]
-tmp <- merge(tmp,tmp2,by='g_whoregion')
-tmp[,pck:=1e2*total.x/total.y]
-c4b <- rbind(tmp[,.(g_whoregion,pck)],
-            data.table(g_whoregion='Global',pck=1e2*N3[year>=2018 & agenow<15,
-                                               sum(alive)]/
-                                              N3[year>=2018,sum(alive)])
-            )
+load(here("../figdat/c1.Rdata")); load(here("../figdat/c1b.Rdata"))
+load(here("../figdat/c2.Rdata")); load(here("../figdat/c2b.Rdata"))
+load(here("../figdat/c4.Rdata")); load(here("../figdat/c4b.Rdata"))
 
 
 ## combine
