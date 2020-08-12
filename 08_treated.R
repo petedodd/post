@@ -184,3 +184,67 @@ c4b <- rbind(tmp[,.(g_whoregion,pck)],
 save(c1,file=here("../figdat/c1.Rdata")); save(c1b,file=here("../figdat/c1b.Rdata"))
 save(c2,file=here("../figdat/c2.Rdata")); save(c2b,file=here("../figdat/c2b.Rdata"))
 save(c4,file=here("../figdat/c4.Rdata")); save(c4b,file=here("../figdat/c4b.Rdata"))
+
+## === for figures
+
+## fig 3
+NZ <- merge(N3[,.(age=agenow,year,sex,iso3,alive.t,g_whoregion)],
+            lamap[,.(age,acat=acats)],
+            by='age',all.x=TRUE,all.y=FALSE)
+NZ <- NZ[!is.na(acat)]
+NZ
+NZ$acat <- factor(NZ$acat,levels=racts,ordered=TRUE)
+NZ[year>=2015,type:='treated within 5 years']
+NZ[year<2015,type:='treated over 5 years ago']
+NZ <- NZ[,.(alive=sum(alive.t)),by=.(acat,sex,g_whoregion,type)]
+
+save(NZ,file=here('../figdat/NZ.Rdata'))
+
+
+## fig 2b
+## ie Years Post TB
+N3[,YPT:=2020-year]
+N3 <- merge(N3,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
+## N3[,acats:=NULL]
+N3RYLx <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+N3RYLx
+N3RYLx[,type:="treated"]
+
+save(N3RYLx,file=here('../figdat/N3RYLx.Rdata'))
+
+## fig 2c
+N3[,acats:=NULL]
+N3 <- merge(N3,lamap[,.(age=age,acats)],by='age') #acats now category for age of TB
+N3RYLx2 <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+N3RYLx2
+N3RYLx2[,type:="treated"]
+
+save(N3RYLx2,file=here('../figdat/N3RYLx2.Rdata'))
+
+
+## regional summary plots
+N3R <- N3[,.(alive.t=sum(alive.t),LYS.t=sum(LYS.t),
+             alive.h=sum(alive.h),LYS.h=sum(LYS.h)),
+          by=.(g_whoregion,year,sex,acat)]
+
+N3R$acat <- factor(N3R$acat,levels=racts,ordered=TRUE)
+yy <- sort(unique(N3R$year))
+N3R$year <- factor(N3R$year,levels=yy,ordered=TRUE)
+
+save(N3R,file=here('../figdat/N3R.Rdata'))
+
+N3RYL <- N3R[,.(LYS.t=sum(LYS.t)),by=.(g_whoregion,sex,acat)]
+N3RYL[,type:="treated"]
+
+save(N3RYL,file=here('../figdat/N3RYL.Rdata'))
+
+## extra stats
+txknum <- N3[acat %in% c('0-4','5-14'),sum(alive.t)]
+txkden <- N3[,sum(alive.t)]
+txknumy <- N3[acat %in% c('0-4','5-14'),sum(LY)]
+txkdeny <- N3[,sum(LY)]
+
+save(txknum,file=here('../tmpdata/txknum.Rdata'))
+save(txkden,file=here('../tmpdata/txkden.Rdata'))
+save(txknumy,file=here('../tmpdata/txknumy.Rdata'))
+save(txkdeny,file=here('../tmpdata/txkdeny.Rdata'))
