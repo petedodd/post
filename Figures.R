@@ -53,14 +53,19 @@ load(file=here('../tmpdata/txkden.Rdata'))
 load(file=here('../tmpdata/txknumy.Rdata'))
 load(file=here('../tmpdata/txkdeny.Rdata'))
 
+load(file=here('../tmpdata/txknum.Rdata'))
+load(file=here('../tmpdata/txkden.Rdata'))
+load(file=here('../tmpdata/txknumy.Rdata'))
+load(file=here('../tmpdata/txkdeny.Rdata'))
+
+
+## TODO output?
+
 1e2*txknum/txkden #1e2*N3[acat %in% c('0-4','5-14'),sum(alive.t)]/N3[,sum(alive.t)]
-1e2*estl[acat %in% c('0-4','5-14'),sum(alive)]/estl[,sum(alive)]
+1e2*utxknum/utxkden#*estl[acat %in% c('0-4','5-14'),sum(alive)]/estl[,sum(alive)]
 
-1e2*(estl[acat %in% c('0-4','5-14'),sum(alive)] + N3[acat %in% c('0-4','5-14'),sum(alive.t)]) / (N3[,sum(alive.t)]+estl[,sum(alive)])
-## 10%
-
-1e2*(estl[acat %in% c('0-4','5-14'),sum(LY)] + N3[acat %in% c('0-4','5-14'),sum(LY)]) / (N3[,sum(LY)]+estl[,sum(LY)])
-## 26%
+1e2*(txknum+utxknum)/(txkden+utxkden)   #10%
+1e2*(txknumy+utxknumy)/(txkdeny+utxkdeny)   #26%
 
 length(cnsdone)
 
@@ -188,7 +193,7 @@ ggplot(N3R,aes(year,alive.t,fill=acat)) +
 ggsave(here('../plots/PostRegionYear2.pdf'),w=10,h=7)
 
 
-load(file=here('../tmpdata/lamap.Rdata'))
+## load(file=here('../tmpdata/lamap.Rdata'))
 
 ## ## age now! NOTE
 ## N3[,agenow:=age + 2020-year]
@@ -206,39 +211,41 @@ load(file=here('../tmpdata/lamap.Rdata'))
 
 
 
-## LYs per person among those living
-## ie Years Post TB
-## N3[,YPT:=2020-year]
-## N3 <- merge(N3,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
-## ## N3[,acats:=NULL]
-## N3RYLx <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #TODO stats for article
-## N3RYL
+## ## LYs per person among those living
+## ## ie Years Post TB
+## ## N3[,YPT:=2020-year]
+## ## N3 <- merge(N3,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
+## ## ## N3[,acats:=NULL]
+## ## N3RYLx <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+## ## N3RYL
 
-names(estl)
-estl <- merge(estl,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
-estl[,YPT:=2020-year]
+## names(estl)
+## estl <- merge(estl,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
+## estl[,YPT:=2020-year]
 
-untxx <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+## untxx <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
 
 load(file=here('../figdat/N3RYL.Rdata'))
+load(file=here('../figdat/untx.Rdata'))
 
-untxx[,type:="untreated"]
+## untxx[,type:="untreated"]
 ## N3RYL[,type:="treated"]
-names(untxx); names(N3RYL)
-N3RYL <- rbind(N3RYL,untxx)
+names(untx); names(N3RYL)
+N3RYL <- rbind(N3RYL,untx)
 
-N3RYL$acats <- factor(N3RYL$acats,levels=racts,ordered=TRUE)
+N3RYL$acat <- factor(N3RYL$acat,levels=racts,ordered=TRUE)
+N3RYL$type <- factor(N3RYL$type,levels=c('untreated','treated'),ordered=TRUE)
 
-## TODO have overwritten figure 2!
-## --- figure 2 TODO ----
 
-## fig2 TODO
-GP <- ggplot(N3RYL,aes(x=acats,y=LYS.t,fill=type)) +
-  geom_bar(position='dodge',stat='identity') +
+## --- figure 2 ----
+
+## fig2 
+GP <- ggplot(N3RYL,aes(x=acat,y=LYS.t,fill=(type))) +
+  geom_bar(stat='identity') +
   facet_grid(sex~g_whoregion) +
   scale_y_continuous(label=absspace) +
-  xlab('Age now (years)') + ylab('Mean years lived post-tuberculosis among those alive 2020')+
-  scale_fill_manual(values=clz[c(4,1)])+
+  xlab('Age of tuberculosis (years)') + ylab('Post-tuberculosis life-years 1980-2020')+
+  scale_fill_manual(values=clz[c(1,4)])+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme(legend.title = element_blank(),legend.position = 'top')
@@ -249,16 +256,18 @@ ggsave(GP,file=here('figs/Figure2.eps'),w=9,h=7)
 ggsave(GP,file=here('figs/Figure2.png'),w=9,h=7)
 
 
-names(estl)
-estl <- merge(estl,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
-estl[,YPT:=2020-year]
+## names(estl)
+## estl <- merge(estl,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
+## estl[,YPT:=2020-year]
 
-untxx <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+## untxx <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
 
+load(file=here('../figdat/untxx.Rdata'))
 load(file=here('../figdat/N3RYLx.Rdata'))
 
-untxx[,type:="untreated"]
+## untxx[,type:="untreated"]untxx[,type:="untreated"]
 ## N3RYLx[,type:="treated"]
+
 names(untxx); names(N3RYLx)
 N3RYLx <- rbind(N3RYLx,untxx)
 
@@ -290,15 +299,15 @@ ggsave(GP,file=here('../plots/Figure2b.pdf'),w=9,h=7)
 ## N3RYLx2 <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #TODO stats for article
 ## N3RYLx2
 
-estl[,acats:=NULL]
-estl2 <- merge(estl,lamap[,.(age,acats)],by='age') #acats now category for age of TB
-estl2[,YPT:=2020-year]
+## estl[,acats:=NULL]
+## estl <- merge(estl,lamap[,.(age,acats)],by='age') #acats now category for age of TB
+## ## estl[,YPT:=2020-year]
 
-untxx <- estl2[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
-
+## untxx2 <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+load(file=here('../figdat/untxx.Rdata'))
 load(file=here('../figdat/N3RYLx2.Rdata'))
 
-untxx2[,type:="untreated"]
+
 ## N3RYLx2[,type:="treated"]
 names(untxx2); names(N3RYLx2)
 N3RYLx2 <- rbind(N3RYLx2,untxx2)
@@ -336,13 +345,13 @@ ggsave(GP,file=here('../plots/Figure2c.pdf'),w=9,h=7)
 ## tmp <- NZ[,.(alive=sum(alive.t)),by=.(acat,sex,g_whoregion,type)] #TODO check Figure 3
 
 
-NU <- merge(estl[,.(age=agenow,year,sex,iso3,alive,g_whoregion)],
-            lamap[,.(age,acat=acats)],
-            by='age',all.x=TRUE,all.y=FALSE)
-NU <- NU[!is.na(acat)]
-NU
-tmp2 <- NU[,.(alive=sum(alive)),by=.(acat,sex,g_whoregion)]
-tmp2[,type:='untreated']
+## NU <- merge(estl[,.(age=agenow,year,sex,iso3,alive,g_whoregion)],
+##             lamap[,.(age,acat=acats)],
+##             by='age',all.x=TRUE,all.y=FALSE)
+## NU <- NU[!is.na(acat)]
+## NU
+## tmp2 <- NU[,.(alive=sum(alive)),by=.(acat,sex,g_whoregion)]
+## tmp2[,type:='untreated']
 
 ## today <- NZ[,.(alive=sum(alive.t)),by=.(acat,sex,type,g_whoregion)]
 ## today <- rbind(tmp,tmp2)

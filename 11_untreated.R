@@ -99,6 +99,8 @@ estl[,agenow:=age + 2020-year]
 estl
 
 ## figdat
+
+## === table data
 ## estg
 t1r1 <- est[,.(value=sum(e_inc_num),
                value.sd=Ssum((ocdr.sd/ocdr)*e_inc_num)),
@@ -162,17 +164,66 @@ t1r9[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 save(t1r9,file=here('../figdat/t1r9.Rdata')) #life-years untreated
 
+## TODO remove
+## IX <- merge(estl[,.(age=agenow,sex,iso3,alive,g_whoregion)],
+##             lamap[,.(age,acat=acats)],
+##             by='age',all.x=TRUE,all.y=FALSE)
+## IX <- IX[!is.na(acat)]
+## IX
 
-IX <- merge(estl[,.(age=agenow,sex,iso3,alive,g_whoregion)],
+## IX$acat <- factor(IX$acat,levels=racts,ordered=TRUE)
+
+## tmp <- IX[,.(alive=sum(alive)),by=.(acat,sex,g_whoregion)]
+
+## save(IX,file=here('../figdat/IX.Rdata'))
+
+
+## === figure data
+
+## fig 3
+NU <- merge(estl[,.(age=agenow,year,sex,iso3,alive,g_whoregion)],
             lamap[,.(age,acat=acats)],
             by='age',all.x=TRUE,all.y=FALSE)
-IX <- IX[!is.na(acat)]
-IX
+NU <- NU[!is.na(acat)]
+NU <- NU[,.(alive=sum(alive)),by=.(acat,sex,g_whoregion)]
+NU[,type:='untreated']
 
-IX$acat <- factor(IX$acat,levels=racts,ordered=TRUE)
+save(NU,file=here('../figdat/NU.Rdata'))
 
-tmp <- IX[,.(alive=sum(alive)),by=.(acat,sex,g_whoregion)]
+## figure 2
+untx <- estl[,.(LYS.t=sum(LYS)),by=.(g_whoregion,sex,acat)]
+untx[,type:="untreated"]
 
-save(IX,file=here('../figdat/IX.Rdata'))
+save(untx,file=here('../figdat/untx.Rdata'))
+
+## fig 2b
+estl <- merge(estl,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
+estl[,YPT:=2020-year]
+untxx <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+untxx[,type:="untreated"]
+
+save(untxx,file=here('../figdat/untxx.Rdata'))
+
+## fig 2c
+estl[,acats:=NULL]
+estl <- merge(estl,lamap[,.(age,acats)],by='age') #acats now category for age of TB
+## estl[,YPT:=2020-year]
+untxx2 <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+untxx2[,type:="untreated"]
+
+save(untxx2,file=here('../figdat/untxx2.Rdata'))
+
+
+
+## === extra stats
+utxknum <- estl[acat %in% c('0-4','5-14'),sum(alive)]
+utxkden <- estl[,sum(alive)]
+utxknumy <- estl[acat %in% c('0-4','5-14'),sum(LYS)]
+utxkdeny <- estl[,sum(LYS)]
+
+save(utxknum,file=here('../tmpdata/utxknum.Rdata'))
+save(utxkden,file=here('../tmpdata/utxkden.Rdata'))
+save(utxknumy,file=here('../tmpdata/utxknumy.Rdata'))
+save(utxkdeny,file=here('../tmpdata/utxkdeny.Rdata'))
 
 
