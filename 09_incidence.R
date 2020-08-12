@@ -125,7 +125,7 @@ tmp                                     #TODO check new vs new + rel
 
 
 GP <- ggplot(tmp,aes(year,gap)) + geom_line() +
-  ylab('Undiagnosed TB incidence in millions')
+  ylab('Undiagnosed TB incidence in millions') + expand_limits(y=0) +
 GP
 
 if(plt)ggsave(GP,filename=here::here('../plots/Gap.pdf'),w=7,h=5)

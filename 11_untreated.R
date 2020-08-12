@@ -164,20 +164,6 @@ t1r9[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 save(t1r9,file=here('../figdat/t1r9.Rdata')) #life-years untreated
 
-## TODO remove
-## IX <- merge(estl[,.(age=agenow,sex,iso3,alive,g_whoregion)],
-##             lamap[,.(age,acat=acats)],
-##             by='age',all.x=TRUE,all.y=FALSE)
-## IX <- IX[!is.na(acat)]
-## IX
-
-## IX$acat <- factor(IX$acat,levels=racts,ordered=TRUE)
-
-## tmp <- IX[,.(alive=sum(alive)),by=.(acat,sex,g_whoregion)]
-
-## save(IX,file=here('../figdat/IX.Rdata'))
-
-
 ## === figure data
 
 ## fig 3
