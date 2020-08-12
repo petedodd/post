@@ -141,9 +141,9 @@ GP <- ggplot(N3RYL,aes(x=acat,y=LYS.t,fill=(type))) +
   theme(legend.title = element_blank(),legend.position = 'top')
 GP
 
-ggsave(GP,file=here('figs/Figure2.pdf'),w=9.5,h=7)
-ggsave(GP,file=here('figs/Figure2.eps'),w=9.5,h=7)
-ggsave(GP,file=here('figs/Figure2.png'),w=9.5,h=7)
+ggsave(GP,file=here('figs/Figure2.pdf'),w=9.5,h=5)
+ggsave(GP,file=here('figs/Figure2.eps'),w=9.5,h=5)
+ggsave(GP,file=here('figs/Figure2.png'),w=9.5,h=5)
 
 ## fig2b
 load(file=here('../figdat/untxx.Rdata'))
