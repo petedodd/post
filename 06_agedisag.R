@@ -94,7 +94,7 @@ GP <- ggplot(tmp,aes(acat,notes,col=Sex,group=paste(g_whoregion,Sex))) +
   facet_wrap(~g_whoregion) + rot45
 GP
 
-if(plt)ggsave(GP,filename=here('../plots/npc.pdf'))
+if(plt)ggsave(GP,filename=here('../plots/npc.pdf'),h=7,w=10)
 
 TBA
 
