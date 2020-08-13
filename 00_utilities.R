@@ -1,7 +1,7 @@
 ## shared utilities
 
 ## libraries
-library(ggplot2)
+library(ggplot2); theme_set(theme_bw())
 library(scales)
 library(data.table)
 library(imputeTS)
@@ -29,7 +29,6 @@ ev5 <- seq(from = 1,to=99,by=5)
 ## flags
 plt <- FALSE
 overwrite <- FALSE                      #NOTE doesn't apply to age maps in this file
-cr <- FALSE                             #perfect cor in errors TODO
 
 
 ## age maps

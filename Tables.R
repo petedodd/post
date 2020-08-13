@@ -1,7 +1,7 @@
 ## this will be the tables
 rm(list=ls())
 library(here)
-
+library(data.table)
 
 whozg <- c('AFR','AMR','EMR','EUR','SEA','WPR')
 whozt <- c('Africa','The Americas','Eastern Mediterranean','Europe','South-East Asia',

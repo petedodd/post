@@ -2,7 +2,7 @@
 
 rm(list=ls())
 
-library(ggplot2)
+library(ggplot2);theme_set(theme_bw())
 library(scales)
 library(data.table)
 library(ggthemes)
