@@ -120,11 +120,15 @@ ggplot(estl[,.(gap=sqrt(sum(gapl.sd^2,na.rm=TRUE))/sum(gapl,na.rm=TRUE)),by=year
 
 
 ## NOTE gap includes relapse
-## TODO restrict to new
+## restrict to new
+## TODO rat uncertainty
+estl[,summary(rat)]
+estl[,gapl:=gapl * (1-rat)]
+estl[,gapl.sd:=gapl.sd * (1-rat)]
 
 
 ## what proportion of those on ART have been so for less than 1 year?
-curve((x-1+exp(-x))/(x^2/2),from=0,to=20) #approximation with linear incidence
+curve((x-1+exp(-x))/(x^2/2),from=0,to=20,ylim=c(0,1)) #approximation with linear incidence
 TBH[,p1:=pmax(0,year-2000)]
 TBH[,p1:=(p1-1+exp(-p1))/(p1^2/2)]
 TBH[year<=2000,p1:=1]
@@ -167,15 +171,20 @@ estl <- merge(estl,N3[,.(iso3,year,age,sex,H,H.sd)],
 estl <- merge(estl,TBH[,.(iso3,year,hfr,hfr.sd)],
               by=c('iso3','year'),all.x=TRUE,all.y=FALSE)
 estl[is.na(hfr),c('hfr','hfr.sd'):=0]
-
+estl[is.na(H),H:=0]
+estl[is.na(H.sd),H.sd:=0]
 
 ## split gap by HIV
 estl[,gapl.h:= H * gapl]
 estl[,gapl.0:= (1-H) * gapl]
 estl[,gapl.h.sd:= xfun(H,gapl,H.sd,gapl.sd)]
 estl[,gapl.0.sd:= xfun((1-H),gapl,H.sd,gapl.sd)]
-## estl[,gapl.h.sd:= sqrt(H^2 * gapl.sd^2+H.sd^2 * gapl.sd^2+H.sd^2 * gapl^2)]
-## estl[,gapl.0.sd:= sqrt((1-H)^2 * gapl.sd^2+H.sd^2 * gapl.sd^2+H.sd^2 * gapl^2)]
+
+## checks
+estl[,sum(gapl)]
+estl[,sum(gapl.h+gapl.0)]
+estl[,sqrt(sum(gapl.0.sd^2) + sum(gapl.h.sd^2))]
+estl[,Ssum(gapl.sd)]
 
 
 ## apply CFRs
@@ -193,15 +202,17 @@ estl[,gapls.0.sd:=xfun(gapl.0,1-acfr,gapl.0.sd,acfr.sd)]
 estl[acat=='0-4',gapls.0.sd:=xfun(gapl.0,1-kcfr,gapl.0.sd,kcfr.sd)]
 estl[acat=='5-14',gapls.0.sd:=xfun(gapl.0,1-ccfr,gapl.0.sd,ccfr.sd)]
 estl[,gapls.h.sd:=xfun(gapl.h,1-hfr,gapl.h.sd,hfr.sd)]
-
 estl[,gapls.sd:=sqrt(gapls.h.sd^2 + gapls.0.sd^2)]
 
-
+## checks
 summary(estl[,.(gapls.sd)])
 
-## estl[,gapls.0.sd:=sqrt(gapl.0^2 * acfr.sd^2 + gapl.0.sd^2 * acfr.sd^2 + gapl.0.sd^2 * (1-acfr)^2)]
-## estl[acat=='0-4',gapls.0.sd:=sqrt(gapl.0^2 * kcfr.sd^2 + gapl.0.sd^2 * kcfr.sd^2 + gapl.0.sd^2 * (1-kcfr)^2)]
-## estl[acat=='5-14',gapls.0.sd:=sqrt(gapl.0^2 * ccfr.sd^2 + gapl.0.sd^2 * ccfr.sd^2 + gapl.0.sd^2 * (1-ccfr)^2)]
-## estl[,gapls.h.sd:=sqrt(gapl.h.sd^2 * (1-hfr)^2 + gapl.h.sd^2 * hfr.sd^2 + gapl.h^2 * hfr.sd^2)]
+estl[,sum(gapl)]
+estl[,sum(gapls)]
+estl[,sum(gapls.0)+sum(gapls.h)]
+
+estl[,Ssum(gapl.sd)]
+estl[,Ssum(gapls.sd)]
+estl[,sqrt(sum(gapls.0.sd^2) + sum(gapls.h.sd^2))]
 
 save(estl,file=here('../tmpdata/estl.Rdata'))
