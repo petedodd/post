@@ -14,6 +14,7 @@ if(! overwrite ){
 est <- fread(here("../indata/TB_burden_countries_2020-02-24.csv"))
 load(here('../tmpdata/TBN.Rdata'))
 
+est0 <- copy(est)
 
 ## start work
 est <- est[,.(iso3,year,e_inc_num,ocdr=c_cdr/1e2,ocdr.sd=(c_cdr_hi-c_cdr_lo)/392)]
@@ -26,7 +27,7 @@ est <- est[order(year)]
 ## NOTE need to extrapolate back to 1980
 TBN[year==2000,ratio:=as.numeric(c_newinc),by=iso3]
 TBN[,ratio:=mean(ratio,na.rm=TRUE),by=iso3] #same for all years
-TBN[,ratio:=c_newinc/ratio,by=iso3]
+TBN[,ratio:=c_newinc/ratio,by=iso3]         #ratio wrt year 2000
 
 TBN[,.(iso3,year,c_newinc,ratio)]
 TBN[is.finite(ratio),summary(ratio)]
@@ -110,21 +111,24 @@ est[gap<0,gap:=0]
 
 ## CDRs
 est[iso3=='IND',ocdr:=c_newinc0/e_inc_num] #NOTE correcting IND CDR 
-est[is.na(ocdr),ocdr:=c_newinc0/e_inc_num] #TODO think dropped relapse jj
-est[,tmp:=max(ocdr.sd,na.rm=TRUE),by=iso3] #use biggest sd
+est[is.na(ocdr),ocdr:=c_newinc0/e_inc_num]
+
+est[,tmp:=max(ocdr.sd,na.rm=TRUE),by=iso3] #use biggest historical sd for NAs
 est[!is.finite(ocdr.sd),ocdr.sd:=tmp] #fill in
 est[,tmp:=NULL]
 est[,summary(ocdr)]
 est[!is.finite(ocdr)]                   #0s
-est[!is.finite(ocdr),ocdr:=1]                   #set to 1
-est[ocdr==0]                   # rounding
-est[ocdr==0,ocdr:=0.5]                   # rounding
-est[,gap.sd:=gap * ocdr.sd / ocdr]
-est[,summary(gap.sd/gap)]
+est[!is.finite(ocdr),ocdr:=1]           #set to 1: countries with very few cases
+est[ocdr==0]                            # rounding
+est[ocdr==0,ocdr:=0.5]                  # rounding issues with few cases
+est[,gap.sd:=gap * ocdr.sd / ocdr]      # gap sd dominated by CDR sd
+est[,summary(gap.sd/(gap+1e-9))]
+est[(gap.sd/(gap+1e-9))>1]
+est[(gap.sd/(gap+1e-9))>1,gap.sd:=gap/1.2]  #safety
 
 ## tmp <- est[iso3!='IND',.(gap=sum(gap)/1e6,gap2=sum(c_newinc0*(1/ocdr-1))/1e6),by=year]
 tmp <- est[,.(gap=sum(gap)/1e6,gap2=sum(c_newinc0*(1/ocdr-1))/1e6),by=year]
-tmp                                     #TODO check new vs new + rel
+tmp                                     #new + relapse
 
 GP <- ggplot(tmp,aes(year,gap)) + geom_line() +
   ylab('Undiagnosed TB incidence in millions') + expand_limits(y=0)
@@ -132,14 +136,15 @@ GP
 
 if(plt)ggsave(GP,filename=here::here('../plots/Gap.pdf'),w=7,h=5)
 
+
 GP <- GP + geom_line(aes(year,gap2),col=2)
-GP
-
-if(plt)ggsave(GP,filename=here::here('../plots/GapCheck.pdf'),w=7,h=5) #think 1 lacks IND corr
+GP                                      #gapcheck
 
 
-tmpi <- merge(tmpi,est[,.(gap=sum(gap)/1e6),by=year],by='year')
-tmpim <- melt(tmpi,id='year')
+## tmpi <- merge(tmpi,est[,.(gap=sum(gap)/1e6),by=year],by='year')
+tmpi <- est[,.(incnum=sum(e_inc_num)/1e6,
+               gap=sum(gap)/1e6,gap.sd=Ssum(gap.sd)/1e6),by=year]
+tmpim <- melt(tmpi[,.(incnum,gap,year)],id='year')
 tmpim[variable=='incnum',variable:='total']
 tmpim[variable=='gap',variable:='untreated']
 
@@ -153,13 +158,29 @@ if(plt)ggsave(GP2,file=here::here('../plots/Gap2.pdf'),w=7,h=5)
 
 
 tmpi
+
 GP3 <- ggplot(tmpi,aes(year,(1-gap/incnum))) + geom_line() +
   scale_y_continuous(label=percent) + expand_limits(y=0) +
   xlab('Year')+ ylab('Case Detection Ratio') +
   theme_classic() + ggpubr::grids()
+GP3 <- GP3 + geom_ribbon(aes(ymin=(1-(gap-gap.sd*1.96)/incnum),
+                      ymax=(1-(gap+gap.sd*1.96)/incnum)),
+                      fill='grey',alpha=0.3,col=NA)
 GP3
 
 if(plt)ggsave(GP3,file=here::here('../plots/Gap2cdr.pdf'),w=7,h=5)
 
+## checks on uncertainty
+tst <- est0[,.(year,ocdr=c_cdr/1e2,ocdr.sd=(c_cdr_hi-c_cdr_lo)/392,
+               inc=e_inc_num,inc.sd=(e_inc_num_hi-e_inc_num_lo)/3.92)]
+
+tst[year==2000,Ssum(inc.sd)/sum(inc)]             #~8%
+est[year==2000,Ssum(gap.sd)/sum(gap)]             #~9%
+
+tst[,Ssum(inc.sd)/sum(inc),by=year]             #~8%
+est[,Ssum(gap.sd)/sum(gap),by=year]             #~9%
+
+tst[year==2000,Ssum(inc.sd)/sum(inc)]             #~8%
+est[year==2000,Ssum(gap.sd)/sum(gap)]             #~9%
 
 save(est,file=here::here('../tmpdata/estg.Rdata'))
