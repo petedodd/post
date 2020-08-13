@@ -17,8 +17,6 @@ load(here('../tmpdata/TBH.Rdata'))
 
 
 ## NOTE this version TBN c_newinc is just new. Check OK with gap
-## N3[,value0:=value]
-## n3 <- N3[,.(iso3,year,age,sex,value=value0)] #this is correcting for death
 if(! 'acat' %in% names(N3)) N3 <- merge(N3,lamap[,.(age,acat=acats)],by='age') #merge in coarse cats if not already there
 
 
@@ -33,78 +31,97 @@ N3[,sum(propnote),by=.(iso3,year)]      #check
 N3[,summary(propnote)]
 N3[is.na(propnote)]                     #no cases
 
+## long form estimates with age/sex: making estl
+length(unique(est$iso3));length(unique(N3$iso3));
+missed <- setdiff(est[,unique(iso3)],N3[,unique(iso3)])
+## merge
 estl <- merge(est,N3[,.(iso3,year,sex,age,acat,propnote)],
               by=c('iso3','year'),all.y=TRUE)
 
+## global average
+propnoteav <- estl[,.(pnav=mean(propnote)),by=.(sex,age)]
+propnoteav[,pnav:=pnav/sum(pnav)]
+propnoteav[,sum(pnav)]
+
+length(unique(estl$iso3))
+estl[is.na(gap)]
+estl[!is.finite(gap),unique(iso3)]      #just SDN - no longer a country past 2000
+estl <- estl[is.finite(gap)]             #drop these country years
+
+## add back countries lost in merge using global average propnote
+est[iso3 %in% missed,sum(gap)]
+setdiff(names(estl),names(est))
+xtra <- estl[iso3=='AFG' &  year==2000,.(sex,age,acat)]
+xtra <- merge(xtra,propnoteav[,.(propnote=pnav,sex,age)],by=c('sex','age'))
+cy <- nrow(est[iso3 %in% missed])       #country years missed
+xtra2 <- est[iso3 %in% missed][rep(1:cy,each=nrow(xtra))]
+xtra2 <- cbind(xtra2,xtra)
+xtra2[iso3=='WLF' & year==2010]
+xtra2[iso3=='WLF' & year==2010,sum(propnote)]
+
+estl <- rbind(estl,xtra2)
+
+## also add to countries with 0 cases to not muck up below
+estl <- merge(estl,propnoteav,by=c('sex','age'),all.x=TRUE)
+estl[,tprop:=sum(propnote),by=.(iso3,year)]
+estl[tprop==0,propnote:=pnav]           #use average for these countries
+
+## checks
+est[year==2010,sum(gap,na.rm=FALSE)]
+estl[year==2010,sum(propnote*gap,na.rm=FALSE)]
+
+## merge in relative CDRs
 estl <- merge(estl,RRcdr,by='iso3',all.x=TRUE)
+summary(estl[,.(RRu5,RR514)])
 
-## u5 fraction
-estl[,p5:=NA_real_]
-estl[acat=='0-4',p5:=propnote]
-estl[,p5:=sum(p5,na.rm=TRUE),by=.(iso3,year)]
-## 5-14 fraction
-estl[,p15:=NA_real_]
-estl[acat=='5-14',p15:=propnote]
-estl[,p15:=sum(p15,na.rm=TRUE),by=.(iso3,year)]
+## do by renormalizing propnote after scaling
+estl[acat=='0-4',propnote:=propnote * RRu5]
+estl[acat=='5-14',propnote:=propnote * RR514]
+estl[,tprop:=sum(propnote),by=.(iso3,year)]
+estl[,propnote:=propnote/tprop]
+estl[,tprop:=sum(propnote),by=.(iso3,year)] #checks
+estl[,summary(tprop)]
 
-## cdra = (p5*RR5 + p15*RR14 + pa) * ocdr
-estl[,cdra := (p5*RRu5 + p15*RR514 + (1-p15-p5)) * ocdr]
-estl[,cdru5 := cdra/RRu5]
-estl[,cdr514 := cdra/RR514]
-estl[,tcdr:=cdra]
-estl[acat=='0-4',tcdr:=cdru5]
-estl[acat=='5-14',tcdr:=cdr514]
+## checks
+est[year==2010,sum(gap,na.rm=FALSE)]
+estl[year==2010,sum(propnote*gap,na.rm=FALSE)]
 
-## disaggregate gap TODO worry this loses IND correction (see above) jj
-estl[,gapl2:=gap*propnote]               #1 years age/sex gap
-estl[,gapl:=propnote * c_newinc * (1/ tcdr-1)]               #1 years age/sex gap
-estl[gapl<0,gapl:=0]               #safety
-## estl[,gapl.sd:=propnote * c_newinc * (ocdr.sd/( tcdr * ocdr))]   #Taylor expansion, perfect correlation
 
-estl[!is.finite(gap),unique(iso3)]      #just SDN TODO
-estl <- estl[iso3!='SDN']               #drop
-
+## disaggregate
+estl[,gapl:=gap*propnote]
+## uncertainty
 ## F = sd/X
 ## F_i = sd_i/X_i = F / (sqrt(sum_jp_j^2)
-estl[,summary(ocdr.sd)]
-estl[,summary(ocdr.sd/ocdr)]
-estl[(ocdr.sd>ocdr),ocdr.sd:=ocdr]      #safety
+estl[,tprop:=sqrt(sum(propnote^2)),by=.(iso3,year)]
+estl[,summary(tprop)]
+estl[,gapl.sd:=(gap.sd/(gap+1e-9)) * gapl / tprop]
+estl[,summary(gapl.sd)]
 
-estl[,pp:=gapl/sum(gapl),by=.(iso3,year)]
-estl[!is.finite(pp),pp:=0]
-estl[,den:=sqrt(sum(pp^2)),by=.(iso3,year)]
+## can ditch tprop and pnav now
+estl[,c('tprop','pnav'):=NULL]
 
-estl[,gapl.sd :=  gapl * (ocdr.sd/ocdr) / den]
-estl[!is.finite(gapl.sd),gapl.sd:=0]
+## checks
+estl[,sum(gapl)]
+est[,sum(gap)]
+estl[,summary(gapl)]
+estl[,Ssum(gapl.sd),by=year]
+est[,Ssum(gap.sd),by=year]
+estl[,Ssum(gapl.sd)]
+est[,Ssum(gap.sd)]
 
-
-## TODO jj checks
-tmp <- estl[,.(v1=sum(gapl.sd^2)/(sum(gapl)^2+1e-9),
-               v2=(gap.sd[1]/(gap[1]+1e-9))^2),by=.(iso3,year)]
-tmp
-tmp[,summary(v1-v2)]
-tmp[abs(v1-v2)>.01]
-
-estl[,.(gapl=sum(gapl),gapl2=sum(gapl2)),by=.(iso3,year)] #check
-
-
-estl[,bad:=FALSE]
-estl[!is.finite(propnote),bad:=TRUE,by=.(iso3,year)]
-ncts <- length(estl[,unique(age)])
-estl[bad==TRUE,gapl:=gap/ncts]          #safety
-
-
-## gap test
+## gapl sense testing
 N3[year==2017,sum(value)]/1e6
 estl[year==2017,sum(gapl)]/1e6
-estl[year==2017,sum(gapl2,na.rm=TRUE)]/1e6 #approximate check
-
 estl[,sum(gapl)/1e6,by=year]
 
 ggplot(estl[,.(gap=sum(gapl,na.rm=TRUE)/1e6),by=year],aes(year,gap)) + geom_line() + scale_y_continuous(label=absspace)
 
 ggplot(estl[,.(gap=sqrt(sum(gapl.sd^2,na.rm=TRUE))/sum(gapl,na.rm=TRUE)),by=year],aes(year,gap)) + geom_line() + scale_y_continuous(label=absspace)
-## odd blow up TODO
+
+
+## NOTE gap includes relapse
+## TODO restrict to new
+
 
 ## what proportion of those on ART have been so for less than 1 year?
 curve((x-1+exp(-x))/(x^2/2),from=0,to=20) #approximation with linear incidence
