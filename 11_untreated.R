@@ -4,8 +4,8 @@ library(here)
 source(here('00_utilities.R'))
 
 if(! overwrite ){
-  fn <- here('../figdat/IX.Rdata')
-  if(file.exists(fn))stop('Not running as figdat/IX.Rdata exists!')
+  fn <- here('../figdat/t1r9.Rdata')
+  if(file.exists(fn))stop('Not running as figdat/t1r9.Rdata exists!')
 }
 
 ## load data

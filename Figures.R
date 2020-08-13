@@ -105,7 +105,7 @@ ggplot(N3R,aes(year,alive.t,fill=acat)) +
   geom_bar(stat='identity') +
   facet_grid(sex~g_whoregion) +
   scale_y_continuous(label=absspace) +
-  xlab('Year') + ylab('Post-tuberculosis treatment, alive 2020')+
+  xlab('Year') + ylab('TB treatment survivors alive 2020')+
   ## theme_minimal()+
   scale_x_discrete(breaks=seq(from=1980,to=2020,by=5))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1,size=8),

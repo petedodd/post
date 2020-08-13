@@ -49,7 +49,7 @@ TBA[,year:=rep(1980:2019,nrow(YD))]
 
 TBA <- merge(TBA,TBN,by=c('iso3','year','g_whoregion'),all.x=TRUE)
 TBA[,sum(prop),by=.(iso3,year)]
-TBA[,notes:=c_newinc * prop]
+TBA[,notes:=c_newinc * prop]            #c_newinc in TBN is restricted to new
 
 TBA[,range(year)]
 
@@ -81,7 +81,7 @@ if(plt)ggsave(GP,file=here('../plots/NotesAgePattern.pdf'),h=7,w=10)
 
 TBA <- merge(TBA,NSS,by=c('iso3','Sex','acat','year'),all.x=TRUE) #demography
 
-TBA[,npc:=notes/value]
+TBA[,npc:=notes/value]                  #per capita new
 TBA$acat <- factor(TBA$acat,levels=racts,ordered=TRUE)
 
 

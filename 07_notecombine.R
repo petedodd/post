@@ -34,7 +34,7 @@ N2[,NF:=PFa*Female]                     #differ in Female/Male
 N2[,NM:=PMa*Male]
 N2 <- N2[!is.na(NF) & !is.na(NM)]
 
-## check
+## check (this is restricted to new)
 N2[,sum(NF)]/1e6 + N2[,sum(NM)]/1e6     #168m
 TBA[,sum(notes)]/1e6                    #168m
 
