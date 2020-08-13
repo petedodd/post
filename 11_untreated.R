@@ -15,11 +15,12 @@ load(here('../tmpdata/LA.Rdata'))
 
 
 ## merge against life tables etc
+setdiff(unique(estl$iso3),unique(LA$iso3))
 estl <- merge(estl,LA,by=c('iso3','year','age','sex'),all.x = TRUE,all.y = FALSE)
 estl[,range(year)]
 estl
 
-## calcualtions
+## calculations
 estl[,alive.0:=S.0*gapls.0]
 estl[,alive.h:=S.h*gapls.h]
 estl[,alive:=alive.0+alive.h]
@@ -35,9 +36,15 @@ estl[,LYS.0.sd:=xfun(LY.0,gapls.0,LY.0.sd,gapls.0.sd)]
 estl[,LYS.h.sd:=xfun(LY.h,gapls.h,LY.h.sd,gapls.h.sd)]
 estl[,LYS.sd:=sqrt(LYS.h.sd^2 + LYS.0.sd^2)]
 
+## countries without life-table data
+estl[!is.finite(alive.sd),sum(gapl)]
+1e2*estl[!is.finite(alive.sd),sum(gapl)]/estl[is.finite(alive.sd),sum(gapl)]
+estl <- estl[is.finite(alive.sd)]       #drop as tiny
+
+
 summary(estl[,.(alive.sd,LYS.sd)])
-estl[!is.finite(alive.sd)]              #EGY 1980-1982 in 99 yo
-estl[!is.finite(alive.sd),c('S.sd','LY.sd','S.0.sd','LY.0.sd','alive.sd','LYS.sd','alive.0.sd','LYS.0.sd'):=0] #safety
+## estl[!is.finite(alive.sd)]              #EGY 1980-1982 in 99 yo
+## estl[!is.finite(alive.sd),c('S.sd','LY.sd','S.0.sd','LY.0.sd','alive.sd','LYS.sd','alive.0.sd','LYS.0.sd'):=0] #safety
 ## summary(N3[,.(alive.sd,LYS.sd)])
 
 ## ## totals
@@ -64,27 +71,17 @@ estl[!is.finite(alive.sd),c('S.sd','LY.sd','S.0.sd','LY.0.sd','alive.sd','LYS.sd
 
 ## N3[!is.finite(alive.t.sd)]
 
+## sanity checks
 estl[,sum(gapl,na.rm=TRUE)]/1e6                     #197m
 estl[,sum(gapls,na.rm=TRUE)]/1e6                     #98m
 estl[,sum(alive,na.rm=TRUE)]/1e6                     #52.4m
 estl[,sum(LYS,na.rm=TRUE)]/1e9                     #1.2 bn
 
 
-## Too small (uncorrelated)
 estl[,Ssum(gapl.sd,na.rm=TRUE)]/1e6                     #0.76m
 estl[,Ssum(gapls,na.rm=TRUE)]/1e6                     #0.66m
 estl[,Ssum(alive,na.rm=TRUE)]/1e6                     #0.46m
 estl[,Ssum(LYS,na.rm=TRUE)]/1e9                     #0.01bn
-
-## Too large (perfectly correlated)
-estl[,sum(gapl.sd,na.rm=TRUE)]/1e6                     #113m
-estl[,sum(gapls,na.rm=TRUE)]/1e6                     #117m
-estl[,sum(alive,na.rm=TRUE)]/1e6                     #66m
-estl[,sum(LYS,na.rm=TRUE)]/1e9                     #1.7bn
-
-## jjk 
-## TODO think how to have correlated survival but uncorrelated CDR
-## TODO CDR in sub-groups 
 
 40 *                                    #years
   5 *                                   #million gap per year
@@ -102,8 +99,8 @@ estl
 
 ## === table data
 ## estg
-t1r1 <- est[,.(value=sum(e_inc_num),
-               value.sd=Ssum((ocdr.sd/ocdr)*e_inc_num)),
+t1r1 <- est[,.(value=sum(e_inc_num*(1-rat)),
+               value.sd=Ssum((ocdr.sd/ocdr)*e_inc_num*(1-rat))),
             by=g_whoregion] #NOTE this is new
 tmp <- data.table(g_whoregion='Global',
                   value=t1r1[,sum(value)],
@@ -121,7 +118,7 @@ save(t1r1,file=here('../figdat/t1r1.Rdata')) #new total
 estl[g_whoregion=='EMR',.(value=sum(gap),value.sd=Ssum(gap.sd),
                          Ssum(gap.sd)/sum(gap)),by=iso3] #
 
-t1r3 <- estl[,.(value=sum(gap),value.sd=Ssum(gap.sd)),by=g_whoregion] #
+t1r3 <- estl[,.(value=sum(gapl),value.sd=Ssum(gapl.sd)),by=g_whoregion] #
 tmp <- data.table(g_whoregion='Global',
                   value=t1r3[,sum(value)],
                   value.sd=t1r3[,Ssum(value.sd)])
@@ -133,9 +130,9 @@ t1r3[,.(value.sd/value,value-value.sd,value+value.sd)]
 save(t1r3,file=here('../figdat/t1r3.Rdata')) #new untreated
 
 if(cr){
-  t1r6 <- estl[,.(value=sum(alive),value.sd=sum(alive.sd)),by=g_whoregion] #
-  tmp <- data.table(g_whoregion='Global',value=t1r6[,sum(value)],
-                    value.sd=t1r6[,sum(value.sd)])
+  ## t1r6 <- estl[,.(value=sum(alive),value.sd=sum(alive.sd)),by=g_whoregion] #
+  ## tmp <- data.table(g_whoregion='Global',value=t1r6[,sum(value)],
+  ##                   value.sd=t1r6[,sum(value.sd)])
 } else{
     t1r6 <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=g_whoregion] #
     tmp <- data.table(g_whoregion='Global',value=t1r6[,Ssum(value)],
@@ -149,9 +146,9 @@ t1r6[,.(value.sd/value,value-value.sd,value+value.sd)]
 save(t1r6,file=here('../figdat/t1r6.Rdata')) #untreated survivors
 
 if(cr){
-  t1r9 <- estl[,.(value=sum(LYS),value.sd=sum(LYS.sd)),by=g_whoregion] #
-  tmp <- data.table(g_whoregion='Global',value=t1r9[,sum(value)],
-                    value.sd=t1r9[,sum(value.sd)])
+  ## t1r9 <- estl[,.(value=sum(LYS),value.sd=sum(LYS.sd)),by=g_whoregion] #
+  ## tmp <- data.table(g_whoregion='Global',value=t1r9[,sum(value)],
+  ##                   value.sd=t1r9[,sum(value.sd)])
 } else {
   t1r9 <- estl[,.(value=sum(LYS),value.sd=Ssum(LYS.sd)),by=g_whoregion] #
   tmp <- data.table(g_whoregion='Global',value=t1r9[,sum(value)],
