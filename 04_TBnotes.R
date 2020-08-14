@@ -19,8 +19,8 @@ TBN <- TB[,.(iso3,c_newinc,year,ret_rel,g_whoregion)]       #new and relapse
 ##   geom_line()
 
 
-ggplot(TBN[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],aes(year,notes)) +
-  geom_line() + geom_line(data=TBN1[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],col=2)
+## ggplot(TBN[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],aes(year,notes)) +
+##   geom_line() + geom_line(data=TBN1[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],col=2)
 
 
 

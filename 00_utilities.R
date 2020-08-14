@@ -16,9 +16,13 @@ see <- function(x,ns=3)formatC(signif(x,ns),big.mark = ",",format='fg') #for rea
 xfun <- function(x,y,x.sd,y.sd) sqrt(x^2*y.sd^2+x.sd^2*y.sd^2+y^2*x.sd^2)
 Ssum <- function(x,...) sqrt(sum(x^2,...))
 
+xfun3 <- function(x,y,z,x.sd,y.sd,z.sd) xfun(x,y*z,x.sd,xfun(y,z,y.sd,z.sd))
+
 ## ## check
 ## xfun(1,1,.1,.1)
 ## sd(rnorm(1e7,1,.1)*rnorm(1e7,1,.1))
+## xfun3(1,1,2,.1,.1,.3)
+## sd(rnorm(1e7,1,.1)*rnorm(1e7,1,.1)*rnorm(1e7,2,.3))
 
 
 ## ====== demography turn N into 1 year age group interpolator for right years
@@ -28,7 +32,7 @@ ev5 <- seq(from = 1,to=99,by=5)
 
 ## flags
 plt <- FALSE
-overwrite <- FALSE                      #NOTE doesn't apply to age maps in this file
+overwrite <- TRUE                      #NOTE doesn't apply to age maps in this file
 
 
 ## age maps

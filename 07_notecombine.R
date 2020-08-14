@@ -16,7 +16,7 @@ load(here('../tmpdata/N2.Rdata'))
 load(here('../tmpdata/HH.Rdata'))
 load(here('../tmpdata/TBOS.Rdata'))
 load(here('../tmpdata/TBH.Rdata'))
-
+load(here('../tmpdata/NNR.Rdata'))      #new sd
 
 ## merge against TBA and use npc
 TBA[iso3=='ABW' & year==2010]
@@ -51,9 +51,14 @@ N3[,value0:=value]                      #including deaths
 N3 <- merge(N3,TBOS[,.(iso3,pd,pd.sd)],by='iso3',all.x=TRUE)
 N3[,value:=value * (1-pd)]
 N3[,value.sd:=value * pd.sd]            #UNC
+
+N3 <- merge(N3,NNR,by='iso3',all.x=TRUE) #
+N3[,value.sd:=xfun(value,1,value.sd,rat.sd)] #rat already included in value TODO check
+
+## N3[,value.sd:=value * pd.sd] # bug! included 2x
 N3[,sum(value)]/1e6                     #162m
 N3[,summary(value/value0)]              #deaths out
-
+N3[is.na(value/value0),.(iso3,value,value0)]
 
 ## merge in HIV data
 N3 <- merge(N3,TBH,by=c('iso3','year'),all.x=TRUE)

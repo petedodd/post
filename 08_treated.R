@@ -30,18 +30,28 @@ N3[,alive.h:=S.h*value*(H)]
 N3[,LYS.h:=LY.h*value*(H)]
 
 ## uncertainty TODO unc check correlations UNC jak
-N3[,alive.sd:=S.sd*value]               #not used
-N3[,LYS.sd:=LY.sd*value]                #not used
-N3[,alive.0.sd:=value * xfun(S.0,(1-H),S.0.sd,H.sd)]
-N3[,LYS.0.sd:=value * xfun(LY.0,(1-H),LY.0.sd,H.sd)]
-N3[,alive.h.sd:=value * xfun(S.h,H,S.h.sd,H.sd)]
-N3[,LYS.h.sd:=value * xfun(LY.h,H,LY.h.sd,H.sd)]
+N3[,alive.sd:=xfun(value,S,value.sd,S.sd)]               #not used
+N3[,LYS.sd:=xfun(LY,value,LY.sd,value.sd)]                #not used
+N3[,alive.0.sd:=xfun3(value,S.0,(1-H),value.sd,S.0.sd,H.sd)]
+N3[,LYS.0.sd:=xfun3(value,LY.0,(1-H),value.sd,LY.0.sd,H.sd)]
+N3[,alive.h.sd:=xfun3(value,S.h,H,value.sd,S.h.sd,H.sd)]
+N3[,LYS.h.sd:=xfun3(value,LY.h,H,value.sd,LY.h.sd,H.sd)]
+## N3[,alive.sd:=S.sd*value]               #not used
+## N3[,LYS.sd:=LY.sd*value]                #not used
+## N3[,alive.0.sd:=value * xfun(S.0,(1-H),S.0.sd,H.sd)]
+## N3[,LYS.0.sd:=value * xfun(LY.0,(1-H),LY.0.sd,H.sd)]
+## N3[,alive.h.sd:=value * xfun(S.h,H,S.h.sd,H.sd)]
+## N3[,LYS.h.sd:=value * xfun(LY.h,H,LY.h.sd,H.sd)]
+
 
 
 summary(N3[,.(alive.sd,LYS.sd)])
 N3[!is.finite(alive.sd)]                #odd EGY early 1980s in 99 yo
 N3[!is.finite(alive.sd),c('hsa','haa','S.sd','LY.sd','S.0.sd','LY.0.sd','alive.sd','LYS.sd','alive.0.sd','LYS.0.sd'):=0] #safety
 summary(N3[,.(alive.sd,LYS.sd)])
+
+
+names(N3)
 
 ## N3[,alive.0.sd:=value*sqrt(S.0.sd^2*(1-H)^2 + S.0.sd^2*(H.sd^2) + S.0^2*(H.sd^2))]
 ## N3[,LYS.0.sd:=value*sqrt(LY.0.sd^2*(1-H)^2 + LY.0.sd^2*(H.sd^2) + LY.0^2*(H.sd^2))]
@@ -80,8 +90,6 @@ N3 <- merge(N3,isokey,by = 'iso3')
 
 
 ## === for table 1
-
-
 t1r5 <- N3[,.(value=sum(alive.t),
               value.sd=Ssum(alive.t.sd)),
            by=g_whoregion]
