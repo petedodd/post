@@ -97,7 +97,94 @@ t1 <- merge(t1,wrk,by='g_whoregion')
 t1$name <- factor(t1$name,levels=wrk$name,ordered=TRUE)
 t1$nm <- factor(t1$nm,levels=namekey$nm,ordered=TRUE)
 
-T1 <- dcast(t1,nm ~ name,value.var = 'value')
+## ## --- uncheck
+## unc <- t1[,.(pcunc=1e2*value.sd/value),by=.(nm,g_whoregion,quantity)]
+## unc[,.(pcunc,g_whoregion,quantity)]
+## unc[g_whoregion=='Global',.(pcunc,nm)]
+
+## est <- fread(here("../indata/TB_burden_countries_2020-02-24.csv"))
+## est[,c("inc","inc.sd"):=.(e_inc_num,(e_inc_num_hi-e_inc_num_lo)/3.92)]
+## 1e2*est[,Ssum(inc.sd)/sum(inc)]         #~1.8 %
+
+## ## consider 2 stage thing where years are aggregated and then assumed to correlate across years? true for countries
+
+## 1e2*est[,Ssum(inc.sd)/sum(inc)]         #~1.8 %
+
+## tmp <- est[,.(inc.sd=sum(inc.sd)),by=iso3]         #~1.8 %
+## 1e2*tmp[,Ssum(inc.sd)]/est[,sum(inc)]         # too high!
+
+## ## temporal correlation
+## tb <- fread(here("../indata/TB_notifications_2020-02-24.csv"))
+## tt <- tb[,.(iso3,year,c_newinc)]
+
+## tt[iso3=='ZWE',.(iso3,year,c_newinc)]
+
+## library(forecast)
+
+
+## Acf(tt[iso3=='ZWE',.(c_newinc)])
+## Pacf(tt[iso3=='ZWE',.(c_newinc)])
+## Ccf(tt[iso3=='ZWE',.(c_newinc)],tt[iso3=='ZWE',.(c_newinc)])
+
+## for(cn in tt[,unique(iso3)]){
+##   pdf(paste0(here("../ts/"),cn,'.pdf'))
+##   Pacf(tt[iso3==cn,.(c_newinc)])
+##   dev.off()
+## }
+
+## tst <- Pacf(tt[iso3=='ZWE',.(c_newinc)],plot=FALSE,cal.ci=TRUE)
+## str(tst)
+
+## pz <- list()
+## for(cn in tt[,unique(iso3)]){
+##   pz[[cn]] <- list(pi=Pacf(tt[iso3==cn,.(c_newinc)],plot=FALSE)[1]$acf[1,1,1],iso3=cn)
+## }
+## pz <- rbindlist(pz)
+
+
+## tmp <- est[,.(inc.sd=sum(inc.sd)),by=iso3]         #~1.8 %
+
+## tmp <- merge(est[,.(iso3,year,inc,inc.sd)],pz,by='iso3')
+
+## tmp2 <- tmp[,{
+##   V <- sum(inc.sd^2)
+##   n <- length(inc.sd)
+##   x <- c(0,inc.sd[1:(n-1)])
+##   y <- inc.sd
+##   X <- 2*pi*sum(x*y)
+##   list(inc=sum(inc),inc.sd=sqrt(X+V))
+## },by=iso3]
+## tmp2 <- unique(tmp2)
+
+## tmp2 <- tmp[,.(inc=sum(inc),inc.sd=Xsum(inc.sd,pi)),by=iso3]
+## tmp2 <- unique(tmp2)
+
+## tmp2[inc.sd/inc>10]
+
+## tmp3 <- tmp[,.(inc=sum(inc),inc.sd=Ssum(inc.sd)),by=iso3]
+
+## tmp2[,.(inc=sum(inc),inc.sd=Ssum(inc.sd),Ssum(inc.sd)/sum(inc))]
+## tmp3[,.(inc=sum(inc),inc.sd=Ssum(inc.sd),Ssum(inc.sd)/sum(inc))]
+
+## pz[,qplot(pi)]
+
+## save(pz,file=here("../tmpdata/pz.Rdata"))
+
+
+## Xsum <- function(x,pc){
+##   V <- sum(x^2)
+##   n <- length(x)
+##   y <- c(0,x[1:(n-1)])
+##   X <- 2*pc*sum(x*y)
+##   sqrt(V+X)
+## }
+
+## tt
+## ## don't understand why so high for treated
+
+## ## --- uncheck end
+
+t1 <- dcast(t1,nm ~ name,value.var = 'value')
 T1
 
 
