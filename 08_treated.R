@@ -116,7 +116,8 @@ c1 <- rbind(N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whore
             data.table(g_whoregion='Global',
                        N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
 
-c1h <- N3[year>=2015,.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
+c1h <- N3[year>=2015 & g_whoregion=='AFR',
+          .(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
 
 tmp <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion,sex)]
 tmp[,tot:=sum(total),by=g_whoregion]
@@ -143,9 +144,8 @@ c1b <- rbind(N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whor
             data.table(g_whoregion='Global',
                        N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
 
-c1hb <- N3[year>=2018,.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
-
-
+c1hb <- N3[year>=2018 & g_whoregion=='AFR',
+           .(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
 
 tmp <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion,sex)]
 tmp[,tot:=sum(total),by=g_whoregion]
@@ -255,7 +255,7 @@ LYpt <- N3[acat %in% c('0-4','5-14'),.(value=sum(LYS.t),value.sd=sum(LYS.t.sd))]
 save(LYpt,file=here('../tmpdata/LYpt.Rdata'))
 
 ## for male survivors
-SMt <- N3[sex=='male',.(value=sum(alive.t),value.sd=Ssum(alive.t.sd))] #
+SMt <- N3[sex=='Male',.(value=sum(alive.t),value.sd=Ssum(alive.t.sd))] #
 save(SMt,file=here('../tmpdata/SMt.Rdata'))
 
 ## for HIV survivors

@@ -208,7 +208,7 @@ save(LYpu,file=here('../tmpdata/LYpu.Rdata'))
 
 
 ## for male survivors
-SMu <- estl[sex=='male',.(value=sum(alive),value.sd=Ssum(alive.sd))] #
+SMu <- estl[sex=='Male',.(value=sum(alive),value.sd=Ssum(alive.sd))] #
 save(SMu,file=here('../tmpdata/SMu.Rdata'))
 
 ## for HIV survivors

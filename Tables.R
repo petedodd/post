@@ -98,7 +98,7 @@ t1$name <- factor(t1$name,levels=wrk$name,ordered=TRUE)
 t1$nm <- factor(t1$nm,levels=namekey$nm,ordered=TRUE)
 
 
-t1 <- dcast(t1,nm ~ name,value.var = 'value')
+T1 <- dcast(t1,nm ~ name,value.var = 'value')
 T1
 
 
@@ -240,13 +240,13 @@ out <- pcamong(nmr,den)
 
 cat(out,file=here('texto/s_SEApc.txt'),sep=' - ')
 
-## male of survivors TODO
+## male of survivors
 load(file=here('../tmpdata/SMu.Rdata')) #untreated
 load(file=here('../tmpdata/SMt.Rdata')) #treated
 
 
-nmr <- c(t1r5[g_whoregion=='SEA',value] + t1r6[g_whoregion=='SEA',value],
-         sda(t1r5[g_whoregion=='SEA',value.sd],t1r6[g_whoregion=='SEA',value.sd]))
+nmr <- c(SMu[,value] + SMt[,value],
+         sda(SMu[,value.sd],SMt[,value.sd]))
 
 out <- pcamong(nmr,den)
 
@@ -267,9 +267,30 @@ cat(out,file=here('texto/s_SHpc.txt'),sep=' - ')
 
 load(file=here('../figdat/txay.Rdata'))
 load(file=here('../figdat/utay.Rdata'))
+both <- rbind(txay,utay)
+
 ## years lived among survivors
+tmp <- both[,.(wt=sum(wt)),by=YPT]
+long <- sample(1:nrow(tmp),1e4,replace=TRUE,prob=tmp$wt)
+tmp <- tmp[long]
+
+out <- c(quantile(tmp$YPT,0.5),
+         quantile(tmp$YPT,0.25),
+         quantile(tmp$YPT,0.75))
+
+cat(out,file=here('texto/s_SYL.txt'),sep=' - ')
+
 
 ## age of survivors
+tmp <- both[,.(wt=sum(wt)),by=agenow]
+long <- sample(1:nrow(tmp),1e4,replace=TRUE,prob=tmp$wt)
+tmp <- tmp[long]
+
+out <- c(quantile(tmp$agenow,0.5),
+         quantile(tmp$agenow,0.25),
+         quantile(tmp$agenow,0.75))
+
+cat(out,file=here('texto/s_SA.txt'),sep=' - ')
 
 ## ------- stats for 5+2  -------
 load(here("../figdat/c1.Rdata")); load(here("../figdat/c1b.Rdata"))
@@ -290,7 +311,7 @@ out <- pcamong(nmr2,den,sf=2)
 cat(out,file=here('texto/s_2pc.txt'),sep=' - ')
 
 
-## HIV among TODO
+## HIV among 
 load(file=here("../figdat/c1h.Rdata")); load(file=here("../figdat/c1hb.Rdata"))
 
 nmr5 <- c(c1h[,total],
@@ -299,11 +320,11 @@ nmr5 <- c(c1h[,total],
 nmr2 <- c(c1hb[,total],
          c1hb[,total.sd])
 
-den5 <- c(c1[g_whoregion=='Global',total], #AFR
-         c1[g_whoregion=='Global',total.sd])
+den5 <- c(c1[g_whoregion=='AFR',total], #AFR
+         c1[g_whoregion=='AFR',total.sd])
 
-den2 <- c(c1b[g_whoregion=='Global',total], #AFR
-         c1b[g_whoregion=='Global',total.sd])
+den2 <- c(c1b[g_whoregion=='AFR',total], #AFR
+         c1b[g_whoregion=='AFR',total.sd])
 
 
 out2 <- pcamong(nmr2,den2,sf=2)
@@ -335,9 +356,3 @@ out2 <- c(quantile(cagelb$agenow,0.5),
 
 cat(out2,file=here('texto/s_2ageQ.txt'),sep=' - ')
 cat(out5,file=here('texto/s_5ageQ.txt'),sep=' - ')
-
-
-
-## TODO calculations above jj
-
-
