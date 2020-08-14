@@ -109,7 +109,6 @@ save(t1r8,file=here('../figdat/t1r8.Rdata')) #lifeyears among treated
 
 ## === for table 2
 
-
 if(! 'agenow' %in% names(N3)) N3[,agenow:=age + 2020-year]
 
 ## within 5 years

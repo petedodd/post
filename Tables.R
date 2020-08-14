@@ -169,3 +169,175 @@ setkey(tab2,g_whoregion)
 tab2 <- tab2[c('AFR','AMR','EMR','EUR','SEA','WPR','Global')] #reorder
 
 write.csv(tab2,file=here::here('figs/table2.csv'))
+
+
+## ======= Other stats =========
+
+## ------- additional stats to move
+sda <- function(a.sd,b.sd) sqrt((a.sd)^2+(b.sd)^2)
+sdq <- function(a,a.sd,b,b.sd) (a/b) * sda(a.sd/a,b.sd/b)
+
+pcamong <- function(nmr,den,sf=4){
+  out <- c(nmr[1]/den[1],sdq(nmr[1],nmr[2],den[1],den[2]))
+  out <- 1e2*out
+  c(fmtbig(out[1],sf=sf),
+    fmtbig(out[1]-out[2]*1.96,sf=sf),
+    fmtbig(out[1]+out[2]*1.96,sf=sf))
+}
+
+## ------- stats for untx + tx -------
+
+## paediatric LYS
+## untreated
+load(file=here('../tmpdata/LYpu.Rdata'))
+load(file=here('../figdat/t1r9.Rdata'))
+## treated
+load(file=here('../tmpdata/LYpt.Rdata'))
+load(file=here('../figdat/t1r8.Rdata'))
+
+nmr <- c(LYpu[,value] + LYpt[,value],
+         sda(LYpu[,value.sd],LYpt[,value.sd]))
+
+den <- c(t1r8[g_whoregion=='Global',value] + t1r9[g_whoregion=='Global',value],
+         sda(t1r8[g_whoregion=='Global',value.sd],t1r9[g_whoregion=='Global',value.sd]))
+
+
+out <- c(fmtbig(nmr[1],sf=4),
+         fmtbig(nmr[1]-nmr[2]*1.96,sf=4),
+         fmtbig(nmr[1]+nmr[2]*1.96,sf=4))
+
+cat(out,file=here('texto/s_ply.txt'),sep=' - ')
+
+
+
+out <- c(nmr[1]/den[1],sdq(nmr[1],nmr[2],den[1],den[2]))
+out <- 1e2*out
+
+out <- c(fmtbig(out[1],sf=4),
+         fmtbig(out[1]-out[2]*1.96,sf=4),
+         fmtbig(out[1]+out[2]*1.96,sf=4))
+
+
+out <- pcamong(nmr,den)
+
+cat(out,file=here('texto/s_plypc.txt'),sep=' - ')
+
+
+
+## SEA of survivors
+load(file=here('../figdat/t1r5.Rdata')) #treated survivors
+load(file=here('../figdat/t1r6.Rdata')) #untreated survivors
+
+
+nmr <- c(t1r5[g_whoregion=='SEA',value] + t1r6[g_whoregion=='SEA',value],
+         sda(t1r5[g_whoregion=='SEA',value.sd],t1r6[g_whoregion=='SEA',value.sd]))
+
+den <- c(t1r5[g_whoregion=='Global',value] + t1r6[g_whoregion=='Global',value],
+         sda(t1r5[g_whoregion=='Global',value.sd],t1r6[g_whoregion=='Global',value.sd]))
+
+
+out <- pcamong(nmr,den)
+
+cat(out,file=here('texto/s_SEApc.txt'),sep=' - ')
+
+## male of survivors TODO
+load(file=here('../tmpdata/SMu.Rdata')) #untreated
+load(file=here('../tmpdata/SMt.Rdata')) #treated
+
+
+nmr <- c(t1r5[g_whoregion=='SEA',value] + t1r6[g_whoregion=='SEA',value],
+         sda(t1r5[g_whoregion=='SEA',value.sd],t1r6[g_whoregion=='SEA',value.sd]))
+
+out <- pcamong(nmr,den)
+
+cat(out,file=here('texto/s_SMpc.txt'),sep=' - ')
+
+
+## HIV of survivors
+load(file=here('../tmpdata/SHu.Rdata')) #untreated
+load(file=here('../tmpdata/SHt.Rdata')) #treated
+
+
+nmr <- c(SHu[,value]+SHt[,value],sda(SHu[,value.sd],SHu[,value.sd]))
+
+out <- pcamong(nmr,den,sf=2)
+
+cat(out,file=here('texto/s_SHpc.txt'),sep=' - ')
+
+
+load(file=here('../figdat/txay.Rdata'))
+load(file=here('../figdat/utay.Rdata'))
+## years lived among survivors
+
+## age of survivors
+
+## ------- stats for 5+2  -------
+load(here("../figdat/c1.Rdata")); load(here("../figdat/c1b.Rdata"))
+
+## as % of all alive
+nmr5 <- c(c1[g_whoregion=='Global',total],
+         c1[g_whoregion=='Global',total.sd])
+
+nmr2 <- c(c1b[g_whoregion=='Global',total],
+         c1b[g_whoregion=='Global',total.sd])
+
+out <- pcamong(nmr5,den,sf=3)
+
+cat(out,file=here('texto/s_5pc.txt'),sep=' - ')
+
+out <- pcamong(nmr2,den,sf=2)
+
+cat(out,file=here('texto/s_2pc.txt'),sep=' - ')
+
+
+## HIV among TODO
+load(file=here("../figdat/c1h.Rdata")); load(file=here("../figdat/c1hb.Rdata"))
+
+nmr5 <- c(c1h[,total],
+         c1h[,total.sd])
+
+nmr2 <- c(c1hb[,total],
+         c1hb[,total.sd])
+
+den5 <- c(c1[g_whoregion=='Global',total], #AFR
+         c1[g_whoregion=='Global',total.sd])
+
+den2 <- c(c1b[g_whoregion=='Global',total], #AFR
+         c1b[g_whoregion=='Global',total.sd])
+
+
+out2 <- pcamong(nmr2,den2,sf=2)
+out5 <- pcamong(nmr5,den5,sf=2)
+
+cat(out5,file=here('texto/s_5Hpc.txt'),sep=' - ')
+cat(out2,file=here('texto/s_2Hpc.txt'),sep=' - ')
+
+
+## age IQRs
+load(file=here("../figdat/cage.Rdata")); load(file=here("../figdat/cageb.Rdata"))
+
+## calculate weighted quantiles...
+cage <- cage[,.(wt=sum(alive)),by=agenow]
+long <- sample(1:nrow(cage),1e4,replace=TRUE,prob=cage$wt)
+cagel <- cage[long]
+
+cageb <- cageb[,.(wt=sum(alive)),by=agenow]
+longb <- sample(1:nrow(cageb),1e4,replace=TRUE,prob=cageb$wt)
+cagelb <- cageb[long]
+
+out5 <- c(quantile(cagel$agenow,0.5),
+         quantile(cagel$agenow,0.25),
+         quantile(cagel$agenow,0.75))
+
+out2 <- c(quantile(cagelb$agenow,0.5),
+         quantile(cagelb$agenow,0.25),
+         quantile(cagelb$agenow,0.75))
+
+cat(out2,file=here('texto/s_2ageQ.txt'),sep=' - ')
+cat(out5,file=here('texto/s_5ageQ.txt'),sep=' - ')
+
+
+
+## TODO calculations above jj
+
+

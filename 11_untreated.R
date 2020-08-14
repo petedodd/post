@@ -72,16 +72,16 @@ summary(estl[,.(alive.sd,LYS.sd)])
 ## N3[!is.finite(alive.t.sd)]
 
 ## sanity checks
-estl[,sum(gapl,na.rm=TRUE)]/1e6                     #197m
-estl[,sum(gapls,na.rm=TRUE)]/1e6                     #98m
-estl[,sum(alive,na.rm=TRUE)]/1e6                     #52.4m
-estl[,sum(LYS,na.rm=TRUE)]/1e9                     #1.2 bn
+estl[,sum(gapl,na.rm=TRUE)]/1e6
+estl[,sum(gapls,na.rm=TRUE)]/1e6
+estl[,sum(alive,na.rm=TRUE)]/1e6
+estl[,sum(LYS,na.rm=TRUE)]/1e9
 
 
-estl[,Ssum(gapl.sd,na.rm=TRUE)]/1e6                     #0.76m
-estl[,Ssum(gapls,na.rm=TRUE)]/1e6                     #0.66m
-estl[,Ssum(alive,na.rm=TRUE)]/1e6                     #0.46m
-estl[,Ssum(LYS,na.rm=TRUE)]/1e9                     #0.01bn
+estl[,Ssum(gapl.sd,na.rm=TRUE)]/1e6
+estl[,Ssum(gapls,na.rm=TRUE)]/1e6
+estl[,Ssum(alive,na.rm=TRUE)]/1e6
+estl[,Ssum(LYS,na.rm=TRUE)]/1e9
 
 40 *                                    #years
   5 *                                   #million gap per year
@@ -187,7 +187,7 @@ untxx2[,type:="untreated"]
 save(untxx2,file=here('../figdat/untxx2.Rdata'))
 
 ## for age and yl summaries
-utay <- estl[,.(wt=alive.t,YPT,agenow)]
+utay <- estl[,.(wt=alive,YPT,agenow)]
 save(utay,file=here('../figdat/utay.Rdata'))
 
 
