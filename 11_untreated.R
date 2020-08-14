@@ -129,15 +129,9 @@ t1r3[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 save(t1r3,file=here('../figdat/t1r3.Rdata')) #new untreated
 
-if(cr){
-  ## t1r6 <- estl[,.(value=sum(alive),value.sd=sum(alive.sd)),by=g_whoregion] #
-  ## tmp <- data.table(g_whoregion='Global',value=t1r6[,sum(value)],
-  ##                   value.sd=t1r6[,sum(value.sd)])
-} else{
-    t1r6 <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=g_whoregion] #
-    tmp <- data.table(g_whoregion='Global',value=t1r6[,Ssum(value)],
-                    value.sd=t1r6[,sum(value.sd)])
-}
+t1r6 <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=g_whoregion] #
+tmp <- data.table(g_whoregion='Global',value=t1r6[,Ssum(value)],
+                  value.sd=t1r6[,sum(value.sd)])
 t1r6 <- rbind(t1r6,tmp)
 t1r6[,quantity:='totnotx2020']
 
@@ -145,21 +139,17 @@ t1r6[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 save(t1r6,file=here('../figdat/t1r6.Rdata')) #untreated survivors
 
-if(cr){
-  ## t1r9 <- estl[,.(value=sum(LYS),value.sd=sum(LYS.sd)),by=g_whoregion] #
-  ## tmp <- data.table(g_whoregion='Global',value=t1r9[,sum(value)],
-  ##                   value.sd=t1r9[,sum(value.sd)])
-} else {
-  t1r9 <- estl[,.(value=sum(LYS),value.sd=Ssum(LYS.sd)),by=g_whoregion] #
-  tmp <- data.table(g_whoregion='Global',value=t1r9[,sum(value)],
-                    value.sd=t1r9[,Ssum(value.sd)])
-}
+
+t1r9 <- estl[,.(value=sum(LYS),value.sd=Ssum(LYS.sd)),by=g_whoregion] #
+tmp <- data.table(g_whoregion='Global',value=t1r9[,sum(value)],
+                  value.sd=t1r9[,Ssum(value.sd)])
 t1r9 <- rbind(t1r9,tmp)
 t1r9[,quantity:='LYnewnotx2020']
 
 t1r9[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 save(t1r9,file=here('../figdat/t1r9.Rdata')) #life-years untreated
+
 
 ## === figure data
 
@@ -191,11 +181,14 @@ save(untxx,file=here('../figdat/untxx.Rdata'))
 estl[,acats:=NULL]
 estl <- merge(estl,lamap[,.(age,acats)],by='age') #acats now category for age of TB
 ## estl[,YPT:=2020-year]
-untxx2 <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+untxx2 <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #stats for article
 untxx2[,type:="untreated"]
 
 save(untxx2,file=here('../figdat/untxx2.Rdata'))
 
+## for age and yl summaries
+utay <- estl[,.(wt=alive.t,YPT,agenow)]
+save(utay,file=here('../figdat/utay.Rdata'))
 
 
 ## === extra stats
@@ -209,4 +202,15 @@ save(utxkden,file=here('../tmpdata/utxkden.Rdata'))
 save(utxknumy,file=here('../tmpdata/utxknumy.Rdata'))
 save(utxkdeny,file=here('../tmpdata/utxkdeny.Rdata'))
 
+## for paediatric LYs
+LYpu <- estl[acat %in% c('0-4','5-14'),.(value=sum(LYS),value.sd=Ssum(LYS.sd))]
+save(LYpu,file=here('../tmpdata/LYpu.Rdata'))
 
+
+## for male survivors
+SMu <- estl[sex=='male',.(value=sum(alive),value.sd=Ssum(alive.sd))] #
+save(SMu,file=here('../tmpdata/SMu.Rdata'))
+
+## for HIV survivors
+SHu <- estl[,.(value=sum(alive.h),value.sd=Ssum(alive.h.sd))] #
+save(SHu,file=here('../tmpdata/SHu.Rdata'))

@@ -81,21 +81,13 @@ N3 <- merge(N3,isokey,by = 'iso3')
 
 ## === for table 1
 
-if(cr){
-  t1r5 <- N3[,.(value=sum(alive.t),
-                value.sd=sum(alive.t.sd)),
-             by=g_whoregion] #NOTE assuming perfect correlation?
-  tmp <- data.table(g_whoregion='Global',
-                    value=t1r5[,sum(value)],
-                    value.sd=t1r5[,sum(value.sd)])
-} else {
-  t1r5 <- N3[,.(value=sum(alive.t),
-                value.sd=Ssum(alive.t.sd)),
-             by=g_whoregion] #NOTE assuming perfect correlation?
-  tmp <- data.table(g_whoregion='Global',
-                    value=t1r5[,sum(value)],
-                    value.sd=t1r5[,Ssum(value.sd)])
-}
+
+t1r5 <- N3[,.(value=sum(alive.t),
+              value.sd=Ssum(alive.t.sd)),
+           by=g_whoregion]
+tmp <- data.table(g_whoregion='Global',
+                  value=t1r5[,sum(value)],
+                  value.sd=t1r5[,Ssum(value.sd)])
 t1r5 <- rbind(t1r5,tmp)
 t1r5[,quantity:='totnewtx2020']
 
@@ -103,17 +95,11 @@ t1r5[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 save(t1r5,file=here('../figdat/t1r5.Rdata')) #treated survivors
 
-if(cr){
-  t1r8 <- N3[,.(value=sum(LYS.t),value.sd=sum(LYS.t.sd)),by=g_whoregion]
-  tmp <- data.table(g_whoregion='Global',
-                    value=t1r8[,sum(value)],
-                    value.sd=t1r8[,sum(value.sd)])
-} else{
-  t1r8 <- N3[,.(value=sum(LYS.t),value.sd=sum(LYS.t.sd)),by=g_whoregion]
-  tmp <- data.table(g_whoregion='Global',
-                    value=t1r8[,sum(value)],
-                    value.sd=t1r8[,sum(value.sd)])
-}
+t1r8 <- N3[,.(value=sum(LYS.t),value.sd=sum(LYS.t.sd)),by=g_whoregion]
+tmp <- data.table(g_whoregion='Global',
+                  value=t1r8[,sum(value)],
+                  value.sd=t1r8[,sum(value.sd)])
+
 t1r8 <- rbind(t1r8,tmp)
 t1r8[,quantity:='LYnewtx2020']
 
@@ -130,6 +116,8 @@ if(! 'agenow' %in% names(N3)) N3[,agenow:=age + 2020-year]
 c1 <- rbind(N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
             data.table(g_whoregion='Global',
                        N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
+
+c1h <- N3[year>=2015,.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
 
 tmp <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion,sex)]
 tmp[,tot:=sum(total),by=g_whoregion]
@@ -156,6 +144,8 @@ c1b <- rbind(N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whor
             data.table(g_whoregion='Global',
                        N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
 
+c1hb <- N3[year>=2018,.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
+
 
 
 tmp <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion,sex)]
@@ -180,10 +170,18 @@ c4b <- rbind(tmp[,.(g_whoregion,pck)],
                                               N3[year>=2018,sum(alive)])
             )
 
+## age data
+cage <- N3[year>=2015,.(agenow,alive)]
+cageb <- N3[year>=2018,.(agenow,alive)]
+
 ## save data
 save(c1,file=here("../figdat/c1.Rdata")); save(c1b,file=here("../figdat/c1b.Rdata"))
 save(c2,file=here("../figdat/c2.Rdata")); save(c2b,file=here("../figdat/c2b.Rdata"))
 save(c4,file=here("../figdat/c4.Rdata")); save(c4b,file=here("../figdat/c4b.Rdata"))
+## HIV
+save(c1h,file=here("../figdat/c1h.Rdata")); save(c1hb,file=here("../figdat/c1hb.Rdata"))
+## age data
+save(cage,file=here("../figdat/cage.Rdata")); save(cageb,file=here("../figdat/cageb.Rdata"))
 
 ## === for figures
 
@@ -221,6 +219,10 @@ N3RYLx2[,type:="treated"]
 
 save(N3RYLx2,file=here('../figdat/N3RYLx2.Rdata'))
 
+## for age and yl summaries
+txay <- N3[,.(wt=alive.t,YPT,agenow)]
+save(txay,file=here('../figdat/txay.Rdata'))
+
 
 ## regional summary plots
 N3R <- N3[,.(alive.t=sum(alive.t),LYS.t=sum(LYS.t),
@@ -248,3 +250,15 @@ save(txknum,file=here('../tmpdata/txknum.Rdata'))
 save(txkden,file=here('../tmpdata/txkden.Rdata'))
 save(txknumy,file=here('../tmpdata/txknumy.Rdata'))
 save(txkdeny,file=here('../tmpdata/txkdeny.Rdata'))
+
+## for paediatric LYs
+LYpt <- N3[acat %in% c('0-4','5-14'),.(value=sum(LYS.t),value.sd=sum(LYS.t.sd))]
+save(LYpt,file=here('../tmpdata/LYpt.Rdata'))
+
+## for male survivors
+SMt <- N3[sex=='male',.(value=sum(alive.t),value.sd=Ssum(alive.t.sd))] #
+save(SMt,file=here('../tmpdata/SMt.Rdata'))
+
+## for HIV survivors
+SHt <- N3[,.(value=sum(alive.h),value.sd=Ssum(alive.h.sd))] #
+save(SHt,file=here('../tmpdata/SHt.Rdata'))

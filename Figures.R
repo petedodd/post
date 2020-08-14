@@ -31,6 +31,56 @@ est <- est[,.(iso3,year,e_inc_num)]
 load(here('../indata/N_simple.Rdata'))           #5 year age groups
 
 ## ------- additional stats to move
+
+sdq <- function(a,a.sd,b,b.sd) (a/b) * sqrt((a.sd)^2/a^2+(b.sd)^2/b^2)
+
+## ------- stats for untx + tx -------
+
+## paediatric LYS
+## untreated
+load(file=here('../tmpdata/LYpu.Rdata'))
+load(file=here('../tmpdata/t1r9.Rdata'))
+## treated
+load(file=here('../tmpdata/LYpt.Rdata'))
+load(file=here('../tmpdata/t1r8.Rdata'))
+
+
+## SEA of survivors
+load(file=here('../figdat/t1r5.Rdata')) #treated survivors
+load(file=here('../figdat/t1r6.Rdata')) #untreated survivors
+
+## male of survivors
+load(file=here('../tmpdata/SMu.Rdata')) #untreated
+load(file=here('../tmpdata/SMt.Rdata')) #treated
+
+## HIV of survivors
+load(file=here('../tmpdata/SHu.Rdata')) #untreated
+load(file=here('../tmpdata/SHt.Rdata')) #treated
+
+load(file=here('../figdat/txay.Rdata'))
+load(file=here('../figdat/utay.Rdata'))
+## years lived among survivors
+
+## age of survivors
+
+## ------- stats for 5+2  -------
+load(here("../figdat/c1.Rdata")); load(here("../figdat/c1b.Rdata"))
+
+## as % of all alive
+
+
+## HIV among
+load(file=here("../figdat/c1h.Rdata")); load(file=here("../figdat/c1hb.Rdata"))
+
+
+## age IQRs
+load(file=here("../figdat/cage.Rdata")); load(file=here("../figdat/cageb.Rdata"))
+
+
+## TODO calculations above jj
+
+
+
 ## proportion covered
 cnsdone <- N3[,(unique(iso3))]
 cat(cnsdone,file=here('texto/cnsdone.txt'))
