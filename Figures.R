@@ -31,8 +31,10 @@ est <- est[,.(iso3,year,e_inc_num)]
 load(here('../indata/N_simple.Rdata'))           #5 year age groups
 
 ## proportion covered
-cnsdone <- N3[,(unique(iso3))]
+cnsdone <- N3[,as.character(unique(iso3))]
 cat(cnsdone,file=here('texto/cnsdone.txt'))
+
+cat(length(cnsdone),file=here('texto/cnsdonenum.txt'))
 
 
 estr <- est[year==2018]

@@ -44,6 +44,17 @@ fmtbig <- function(x,sf=3){
 fmtbig(123451000)
 fmtbig(123451000,sf=4)
 
+sda <- function(a.sd,b.sd) sqrt((a.sd)^2+(b.sd)^2)
+sdq <- function(a,a.sd,b,b.sd) (a/b) * sda(a.sd/a,b.sd/b)
+
+pcamong <- function(nmr,den,sf=4){
+  out <- c(nmr[1]/den[1],sdq(nmr[1],nmr[2],den[1],den[2]))
+  out <- 1e2*out
+  c(fmtbig(out[1],sf=sf),
+    fmtbig(out[1]-out[2]*1.96,sf=sf),
+    fmtbig(out[1]+out[2]*1.96,sf=sf))
+}
+
 
 ## ============ Table 1
 load(here('../figdat/t1r1.Rdata'))         #Total new tuberculosis cases 1980-2019
@@ -174,18 +185,18 @@ write.csv(tab2,file=here::here('figs/table2.csv'))
 ## ======= Other stats =========
 
 ## ------- additional stats to move
-sda <- function(a.sd,b.sd) sqrt((a.sd)^2+(b.sd)^2)
-sdq <- function(a,a.sd,b,b.sd) (a/b) * sda(a.sd/a,b.sd/b)
-
-pcamong <- function(nmr,den,sf=4){
-  out <- c(nmr[1]/den[1],sdq(nmr[1],nmr[2],den[1],den[2]))
-  out <- 1e2*out
-  c(fmtbig(out[1],sf=sf),
-    fmtbig(out[1]-out[2]*1.96,sf=sf),
-    fmtbig(out[1]+out[2]*1.96,sf=sf))
-}
 
 ## ------- stats for untx + tx -------
+## HIV in new
+load(file=here('../figdat/t1r1.Rdata'))
+load(file=here('../tmpdata/NHu.Rdata'))
+
+nmr <- c(NHu[,value],NHu[,value.sd])
+den <- c(t1r1[g_whoregion=='Global',value],t1r1[g_whoregion=='Global',value.sd])
+
+out <- pcamong(nmr,den,sf=2)
+
+cat(out,file=here('texto/s_HN.txt'),sep=' - ')
 
 ## paediatric LYS
 ## untreated
@@ -271,6 +282,17 @@ both <- rbind(txay,utay)
 
 ## years lived among survivors
 tmp <- both[,.(wt=sum(wt)),by=YPT]
+
+## ggplot(tmp,aes(YPT,wt)) + geom_line()
+
+out <- weighted.mean(tmp$YPT,tmp$wt)    #the mean
+rsds <- tmp$YPT-out                     # residuals
+ods <- sqrt(weighted.mean(rsds^2,tmp$wt)) #NOTE this doesn't give a meaninful UI for mean
+out <- c(fmtbig(out,sf=4))
+
+cat(out,file=here('texto/s_SYL0.txt'),sep=' - ')
+
+
 long <- sample(1:nrow(tmp),1e4,replace=TRUE,prob=tmp$wt)
 tmp <- tmp[long]
 
@@ -333,6 +355,27 @@ out5 <- pcamong(nmr5,den5,sf=2)
 cat(out5,file=here('texto/s_5Hpc.txt'),sep=' - ')
 cat(out2,file=here('texto/s_2Hpc.txt'),sep=' - ')
 
+## Male among
+load(file=here("../figdat/c1m.Rdata")); load(file=here("../figdat/c1mb.Rdata"))
+
+nmr5 <- c(c1m[,total],
+         c1m[,total.sd])
+
+nmr2 <- c(c1mb[,total],
+         c1mb[,total.sd])
+
+den5 <- c(c1[g_whoregion=='Global',total],
+         c1[g_whoregion=='Global',total.sd])
+
+den2 <- c(c1b[g_whoregion=='Global',total],
+         c1b[g_whoregion=='Global',total.sd])
+
+
+out2 <- pcamong(nmr2,den2,sf=3)
+(out5 <- pcamong(nmr5,den5,sf=3))
+
+cat(out5,file=here('texto/s_5Mpc.txt'),sep=' - ')
+cat(out2,file=here('texto/s_2Mpc.txt'),sep=' - ')
 
 ## age IQRs
 load(file=here("../figdat/cage.Rdata")); load(file=here("../figdat/cageb.Rdata"))

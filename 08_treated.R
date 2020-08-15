@@ -119,6 +119,29 @@ save(t1r8,file=here('../figdat/t1r8.Rdata')) #lifeyears among treated
 
 if(! 'agenow' %in% names(N3)) N3[,agenow:=age + 2020-year]
 
+## EMR paed graph
+tmp1 <- N3[year>=2015 & g_whoregion=='EMR',.(total=sum(alive)),by=.(iso3)]
+tmp2 <- N3[year>=2015 & g_whoregion=='EMR' & agenow<15,.(kids=sum(alive)),by=.(iso3)]
+tmp1 <- merge(tmp1,tmp2,by='iso3')
+tmp1[,pcp:=1e2*kids/total]
+
+
+GP <- ggpubr::ggdotchart(tmp1, x = "iso3", y = "total",
+                         sorting = "descending",
+                         add = "segments",
+                         add.params = list(color = "black", size = 1),
+                         rotate = TRUE,
+                         dot.size = 6,
+                         label = round(tmp1$pcp),
+                         font.label = list(color = "white", size = 9,vjust = 0.5)
+                         ) + ggpubr::grids() +
+              scale_y_continuous(label=absspace) +
+              ylab('Treated TB survivors alive 2020') +
+              xlab('Country ISO3 code')
+
+ggsave(GP,file=here('../plots/EMRpaed.pdf'),w=6,h=6)
+
+
 ## within 5 years
 c1 <- rbind(N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
             data.table(g_whoregion='Global',
@@ -126,6 +149,9 @@ c1 <- rbind(N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whore
 
 c1h <- N3[year>=2015 & g_whoregion=='AFR',
           .(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
+c1m <- N3[year>=2015 & sex=='Male',
+          .(total=sum(alive.t),total.sd=Ssum(alive.t.sd))]
+
 
 tmp <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion,sex)]
 tmp[,tot:=sum(total),by=g_whoregion]
@@ -154,6 +180,8 @@ c1b <- rbind(N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whor
 
 c1hb <- N3[year>=2018 & g_whoregion=='AFR',
            .(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
+c1mb <- N3[year>=2018 & sex=='Male',
+          .(total=sum(alive.t),total.sd=Ssum(alive.t.sd))]
 
 tmp <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion,sex)]
 tmp[,tot:=sum(total),by=g_whoregion]
@@ -187,6 +215,8 @@ save(c2,file=here("../figdat/c2.Rdata")); save(c2b,file=here("../figdat/c2b.Rdat
 save(c4,file=here("../figdat/c4.Rdata")); save(c4b,file=here("../figdat/c4b.Rdata"))
 ## HIV
 save(c1h,file=here("../figdat/c1h.Rdata")); save(c1hb,file=here("../figdat/c1hb.Rdata"))
+## M/F
+save(c1m,file=here("../figdat/c1m.Rdata")); save(c1mb,file=here("../figdat/c1mb.Rdata"))
 ## age data
 save(cage,file=here("../figdat/cage.Rdata")); save(cageb,file=here("../figdat/cageb.Rdata"))
 

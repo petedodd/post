@@ -32,8 +32,11 @@ TBN[,ratio:=c_newinc/ratio,by=iso3]         #ratio wrt year 2000
 TBN[,.(iso3,year,c_newinc,ratio)]
 TBN[is.finite(ratio),summary(ratio)]
 TBN[is.finite(ratio),qplot(ratio)]
+TBN[is.finite(ratio),quantile(ratio,0.99)]
+TBN[is.finite(ratio) & year<2000,mean(ratio)+3*sd(ratio)]
+
 TBN[is.finite(ratio) & ratio > 10 & year<2000]
-(badfac <- TBN[is.finite(ratio) & ratio > 5 & year<2000,unique(iso3)])
+(badfac <- TBN[is.finite(ratio) & ratio > 5.26 & year<2000,unique(iso3)])
 
 cat(badfac,file=here('texto/badfac.txt'))
 

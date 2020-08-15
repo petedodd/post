@@ -12,6 +12,8 @@ if(! overwrite ){
 load(here('../tmpdata/estl.Rdata'))
 load(here('../tmpdata/estg.Rdata'))
 load(here('../tmpdata/LA.Rdata'))
+load(here('../tmpdata/TBH.Rdata'))      #only for HIV %
+load(here('../tmpdata/NNR.Rdata'))      #only for HIV %
 
 
 ## merge against life tables etc
@@ -110,9 +112,17 @@ t1r1[,quantity:='totnew']
 
 t1r1[,.(value.sd/value,value-value.sd,value+value.sd)]
 
-
-
 save(t1r1,file=here('../figdat/t1r1.Rdata')) #new total
+
+## HIV
+est <- merge(est,TBH,by=c('iso3','year'))
+est <- merge(est,NNR[,.(iso3,rat.sd)],by='iso3',all.x=TRUE)
+
+est[,value:=hs*e_inc_num*(1-rat)]
+est[,value.sd:=xfun3(hs,e_inc_num,(1-rat),0,(ocdr.sd/ocdr)*e_inc_num,rat.sd)]
+
+NHu <- est[,.(value=sum(value),value.sd=Ssum(value.sd))]
+
 
 ## check
 estl[g_whoregion=='EMR',.(value=sum(gap),value.sd=Ssum(gap.sd),
@@ -214,3 +224,7 @@ save(SMu,file=here('../tmpdata/SMu.Rdata'))
 ## for HIV survivors
 SHu <- estl[,.(value=sum(alive.h),value.sd=Ssum(alive.h.sd))] #
 save(SHu,file=here('../tmpdata/SHu.Rdata'))
+
+## for HIV new cases
+save(NHu,file=here('../tmpdata/NHu.Rdata'))
+
