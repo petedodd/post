@@ -65,55 +65,140 @@ estl
 
 ## === table data
 ## estg
-t1r1 <- est[,.(value=sum(e_inc_num*(1-rat)),
-               value.sd=Ssum((ocdr.sd/ocdr)*e_inc_num*(1-rat))),
-            by=g_whoregion] #NOTE this is new
+names(est)
+est <- merge(est,NNR[,.(iso3,rat.sd)],by='iso3',all.x=TRUE)
+
+## CDR & rat 
+tmpc <- est[,.(value=sum(e_inc_num*(1-rat)),
+               value.sd=sumxy(e_inc_num,(1-rat),
+               (ocdr.sd/ocdr)*e_inc_num,rat.sd)), #variable-wise corr at country level
+           by=.(iso3,g_whoregion)] #fractional unc for val same as rat
+
+t1r1c <- tmpc[,.(iso3,value,value.sd)]
+t1r1c[,quantity:='totnew']
+save(t1r1c,file=here('../figdat/t1r1c.Rdata'))
+
+t1r1c[,summary(1e2*value.sd/value)]
+
+## regional level
+t1r1 <- tmpc[,.(value=sum(value),
+              value.sd=Ssum(value.sd)),
+             by=g_whoregion]
+
 tmp <- data.table(g_whoregion='Global',
                   value=t1r1[,sum(value)],
                   value.sd=t1r1[,Ssum(value.sd)])
 t1r1 <- rbind(t1r1,tmp)
 t1r1[,quantity:='totnew']
 
-t1r1[,.(value.sd/value,value-value.sd,value+value.sd)]
+t1r1[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
+
+
+## ## old
+## t1r1 <- est[,.(value=sum(e_inc_num*(1-rat)),
+##                value.sd=Ssum((ocdr.sd/ocdr)*e_inc_num*(1-rat))),
+##             by=g_whoregion] #NOTE this is new
+## tmp <- data.table(g_whoregion='Global',
+##                   value=t1r1[,sum(value)],
+##                   value.sd=t1r1[,Ssum(value.sd)])
+## t1r1 <- rbind(t1r1,tmp)
+## t1r1[,quantity:='totnew']
+
+## t1r1[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 save(t1r1,file=here('../figdat/t1r1.Rdata')) #new total
 
 ## HIV
 est <- merge(est,TBH,by=c('iso3','year'))
-est <- merge(est,NNR[,.(iso3,rat.sd)],by='iso3',all.x=TRUE)
+## est <- merge(est,NNR[,.(iso3,rat.sd)],by='iso3',all.x=TRUE)
 
 est[,value:=hs*e_inc_num*(1-rat)]
-est[,value.sd:=xfun3(hs,e_inc_num,(1-rat),0,(ocdr.sd/ocdr)*e_inc_num,rat.sd)]
+## est[,value.sd:=xfun3(hs,e_inc_num,(1-rat),0,(ocdr.sd/ocdr)*e_inc_num,rat.sd)]
+## NHu <- est[,.(value=sum(value),value.sd=Ssum(value.sd))]
 
-NHu <- est[,.(value=sum(value),value.sd=Ssum(value.sd))]
+NHu <- est[,.(value=sum(value),
+              value.sd=SSSumxyz(hs,e_inc_num,(1-rat),0,(ocdr.sd/ocdr)*e_inc_num,rat.sd)
+              ),by=iso3] #cor at iso3 level
 
+NHu <- est[,.(value=sum(value),value.sd=Ssum(value.sd))] #uncor across
+NHu[,value.sd/value]
 
-## check
-estl[g_whoregion=='EMR',.(value=sum(gap),value.sd=Ssum(gap.sd),
-                         Ssum(gap.sd)/sum(gap)),by=iso3] #
+## ## check
+## estl[g_whoregion=='EMR',.(value=sum(gap),value.sd=Ssum(gap.sd),
+##                          Ssum(gap.sd)/sum(gap)),by=iso3] #
 
-t1r3 <- estl[,.(value=sum(gapl),value.sd=Ssum(gapl.sd)),by=g_whoregion] #
+## t1r3 <- estl[,.(value=sum(gapl),value.sd=Ssum(gapl.sd)),by=g_whoregion] #
+## tmp <- data.table(g_whoregion='Global',
+##                   value=t1r3[,sum(value)],
+##                   value.sd=t1r3[,Ssum(value.sd)])
+## t1r3 <- rbind(t1r3,tmp)
+## t1r3[,quantity:='totnotx']
+
+## t1r3[,.(value.sd/value,value-value.sd,value+value.sd)]
+
+## NOTE gapl disaggregated over country years in uncorrelated fashion
+## unc mainly CDR; neglect rat
+tmp <- estl[,.(value=sum(gapl),value.sd=Ssum(gapls.sd)),by=.(iso3,g_whoregion,year)]
+tmpc <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)] #NOTE cor iso3
+
+t1r3c <- tmpc[,.(iso3,value,value.sd)]
+t1r3c[,quantity:='totnotx']
+save(t1r3c,file=here('../figdat/t1r3c.Rdata'))
+
+t1r3c[,summary(1e2*value.sd/value)]
+
+## regional level
+t1r3 <- tmpc[,.(value=sum(value),
+              value.sd=Ssum(value.sd)),
+             by=g_whoregion]
+
 tmp <- data.table(g_whoregion='Global',
                   value=t1r3[,sum(value)],
                   value.sd=t1r3[,Ssum(value.sd)])
 t1r3 <- rbind(t1r3,tmp)
 t1r3[,quantity:='totnotx']
 
-t1r3[,.(value.sd/value,value-value.sd,value+value.sd)]
+t1r3[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
 
 save(t1r3,file=here('../figdat/t1r3.Rdata')) #new untreated
 
-t1r6 <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=g_whoregion] #
-tmp <- data.table(g_whoregion='Global',value=t1r6[,Ssum(value)],
-                  value.sd=t1r6[,sum(value.sd)])
-t1r6 <- rbind(t1r6,tmp)
-t1r6[,quantity:='totnotx2020']
+## old
+## t1r6 <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=g_whoregion] #
+## tmp <- data.table(g_whoregion='Global',value=t1r6[,Ssum(value)],
+##                   value.sd=t1r6[,sum(value.sd)])
+## t1r6 <- rbind(t1r6,tmp)
+## t1r6[,quantity:='totnotx2020']
 
-t1r6[,.(value.sd/value,value-value.sd,value+value.sd)]
+## t1r6[,.(value.sd/value,value-value.sd,value+value.sd)]
+
+## NOTE age/sex disaggregation assumes no correlation <- gapl.sd by age sex
+## alive = S * gapls = S * gapl * (1-CFR)
+tmp <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=.(iso3,g_whoregion,year)]
+tmpc <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)] #NOTE approx? TODO
+
+t1r6c <- tmpc[,.(iso3,value,value.sd)]
+t1r6c[,quantity:='totnotx2020']
+save(t1r6c,file=here('../figdat/t1r6c.Rdata'))
+
+t1r6c[,summary(1e2*value.sd/value)]
+
+## regional level
+t1r6 <- tmpc[,.(value=sum(value),
+              value.sd=Ssum(value.sd)),
+             by=g_whoregion]
+
+tmp <- data.table(g_whoregion='Global',
+                  value=t1r6[,sum(value)],
+                  value.sd=t1r6[,Ssum(value.sd)])
+t1r6 <- rbind(t1r6,tmp)
+t1r6[,quantity:='totnew']
+
+t1r6[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
+
 
 save(t1r6,file=here('../figdat/t1r6.Rdata')) #untreated survivors
 
-
+## jj
 t1r9 <- estl[,.(value=sum(LYS),value.sd=Ssum(LYS.sd)),by=g_whoregion] #
 tmp <- data.table(g_whoregion='Global',value=t1r9[,sum(value)],
                   value.sd=t1r9[,Ssum(value.sd)])

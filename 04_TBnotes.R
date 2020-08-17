@@ -218,7 +218,7 @@ t1r2c <- tmpc[,.(iso3,value,value.sd)]
 t1r2c[,quantity:='totnewtx']
 save(t1r2c,file=here('../figdat/t1r2c.Rdata'))
 
-t1r2c[,1e2*value.sd/value]
+t1r2c[,summary(1e2*value.sd/value)]
 
 ## UNC
 tmp <- tmpc[,.(value=sum(value),

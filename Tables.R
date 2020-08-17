@@ -20,6 +20,8 @@ ftb <- Vectorize(function(x){
   } else x <- '-'
   return(x)}, 'x')
 
+## looking at big numbers
+see <- function(x,ns=3)formatC(signif(x,ns),big.mark = ",",format='fg') #for reading big numbers
 
 Ssum <- function(x,...) sqrt(sum(x^2,...))
 
@@ -131,7 +133,7 @@ T1.lo <- T1.mid - T1.sd*1.96
 T1.lo[T1.lo<0] <- 0
 T1.hi <- T1.mid + T1.sd*1.96
 
-SF <- 4
+SF <- 3
 T1.lo <- fmtbig(T1.lo,SF)
 T1.hi <- fmtbig(T1.hi,SF)
 
@@ -142,7 +144,12 @@ BB2 <- matrix(paste0(BB2,"  ",BB),nrow=nrow(T1.lo),ncol=ncol(T1.lo))
 rownames(BB2) <- T1$nm
 colnames(BB2) <- names(T1)[-1]
 BB2
-BB2[,7]
+print(BB2[,7])
+
+## percentage unc int
+pcunc <- 392*T1.sd[,ncol(T1.sd)]/T1.mid[,ncol(T1.mid)]
+print(data.frame(thing=T1$nm,pcunc=see(pcunc,ns=2)))
+
 
 write.csv(BB2,file=here('figs/table1u.csv'))
 
@@ -153,6 +160,9 @@ load(here("../figdat/c1.Rdata")); load(here("../figdat/c1b.Rdata"))
 load(here("../figdat/c2.Rdata")); load(here("../figdat/c2b.Rdata"))
 load(here("../figdat/c4.Rdata")); load(here("../figdat/c4b.Rdata"))
 
+
+## more SF for table 2
+SF <- 4
 
 ## combine
 c1[,totf:=fmtbig(total,SF)]
