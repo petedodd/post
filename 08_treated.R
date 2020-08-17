@@ -16,6 +16,8 @@ load(here('../tmpdata/LA.Rdata'))
 
 ## merge with new LA here
 N3 <- merge(N3,LA,by=c('iso3','year','age','sex'),all.x = TRUE,all.y = FALSE)
+N3 <- merge(N3,isokey,by = 'iso3')
+
 N3[,range(year)]
 
 ## previous version
@@ -51,21 +53,16 @@ tmp[,summary(1e2*value.sd/value)]
 
 
 
-## uncertainty TODO unc check correlations UNC jak
+## uncertainty
 N3[,alive.sd:=xfun(value,S,value.sd,S.sd)]               #not used
 N3[,LYS.sd:=xfun(LY,value,LY.sd,value.sd)]                #not used
 
-
+## HIV stratified unc
 N3[,alive.0.sd:=xfun3(value,S.0,(1-H),value.sd,S.0.sd,H.sd)]
 N3[,LYS.0.sd:=xfun3(value,LY.0,(1-H),value.sd,LY.0.sd,H.sd)]
 N3[,alive.h.sd:=xfun3(value,S.h,H,value.sd,S.h.sd,H.sd)]
 N3[,LYS.h.sd:=xfun3(value,LY.h,H,value.sd,LY.h.sd,H.sd)]
-## N3[,alive.sd:=S.sd*value]               #not used
-## N3[,LYS.sd:=LY.sd*value]                #not used
-## N3[,alive.0.sd:=value * xfun(S.0,(1-H),S.0.sd,H.sd)]
-## N3[,LYS.0.sd:=value * xfun(LY.0,(1-H),LY.0.sd,H.sd)]
-## N3[,alive.h.sd:=value * xfun(S.h,H,S.h.sd,H.sd)]
-## N3[,LYS.h.sd:=value * xfun(LY.h,H,LY.h.sd,H.sd)]
+
 
 
 
@@ -104,24 +101,52 @@ N3[!is.finite(alive.t.sd)]
 
 N3 <- merge(N3,lamap[,.(age,acat=acats)],by='age',all.x=TRUE)
 
+
+
+##aggregate over ages/sex assuming value uncor, S, H corr in each country
+u1h <- N3[,.(alive.h=sum(alive.h),
+            alive.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+u2h <- N3[,.(LYS.h=sum(LYS.h),
+             LYS.h.sd=Sssumxyz(value,LY.h,H,value.sd,LY.h.sd,H.sd)),
+          by=.(iso3,g_whoregion)]
+
+u1 <- N3[,.(alive.0=sum(alive.0),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+u2 <- N3[,.(LYS.0=sum(LYS.0),
+             LYS.0.sd=Sssumxyz(value,LY.0,1-H,value.sd,LY.0.sd,H.sd)),
+          by=.(iso3,g_whoregion)]
+
+u1 <- merge(u1,u1h,by=c('iso3','g_whoregion')) #alive
+u2 <- merge(u2,u2h,by=c('iso3','g_whoregion')) #LYs
+
+u1[,alive:=alive.h+alive.0]
+u2[,LYS:=LYS.h+LYS.0]
+u1[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)]
+u2[,LYS.sd:=sqrt(LYS.h.sd^2+LYS.0.sd^2)]
+
+summary(u2)
+u1[,see(sum(alive))]
+u2[,see(sum(LYS))]
+
 ## ============  figdat =================
-N3 <- merge(N3,isokey,by = 'iso3')
 
 
-## country level option 2
-tmpc <- N3[,.(value=sum(alive.t),
-              value.sd=sum(alive.t.sd)), #assume perfect correlation, approximation TODO
-           by=.(iso3,g_whoregion)] #fractional unc for val same as rat
+## === for table 1
 
-t1r5c <- tmpc[,.(iso3,value,value.sd)]
+## --- tx alive
+
+t1r5c <- u1[,.(iso3,value=alive,value.sd=alive.sd)]
 t1r5c[,quantity:='totnewtx']
 save(t1r5c,file=here('../figdat/t1r5c.Rdata'))
 
 t1r5c[,summary(1e2*value.sd/value)]
+t1r5c[value.sd>value,.(iso3,value.sd/value)]
 
 ## regional level
-t1r5 <- tmpc[,.(value=sum(value),
-              value.sd=Ssum(value.sd)),
+t1r5 <- u1[,.(value=sum(alive),
+              value.sd=Ssum(alive.sd)),
              by=g_whoregion]
 
 tmp <- data.table(g_whoregion='Global',
@@ -132,43 +157,40 @@ t1r5[,quantity:='totnewtx2020']
 
 t1r5[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
 
-
-## ## checking unc
-## tmp <- N3[,.(value=sum(alive.t),
-##              value.sd=Ssum(alive.t.sd)),
-##           by=iso3]
-## tmp[,summary(1e2*value.sd/value)]
-
-## === for table 1
-## t1r5 <- N3[,.(value=sum(alive.t),
-##               value.sd=Ssum(alive.t.sd)),
-##            by=g_whoregion]
-
-t1r5 <- tmpc[,.(value=sum(value),
-              value.sd=Ssum(value.sd)),
-           by=g_whoregion]
-
-tmp <- data.table(g_whoregion='Global',
-                  value=t1r5[,sum(value)],
-                  value.sd=t1r5[,Ssum(value.sd)])
-t1r5 <- rbind(t1r5,tmp)
-t1r5[,quantity:='totnewtx2020']
-
-t1r5[,.(1e2*value.sd/value,see(value),see(value-value.sd*2),see(value+value.sd*2))]
-
 save(t1r5,file=here('../figdat/t1r5.Rdata')) #treated survivors
 
-t1r8 <- N3[,.(value=sum(LYS.t),value.sd=sum(LYS.t.sd)),by=g_whoregion]
+
+## --- LYS
+
+## ## country level
+
+t1r8c <- u2[,.(iso3,value=LYS,value.sd=LYS.sd)]
+
+t1r8c[,quantity:='LYnewtx2020']
+save(t1r8c,file=here('../figdat/t1r8c.Rdata'))
+
+t1r8c[,summary(1e2*value.sd/value)]
+
+## regional level
+t1r8 <- u2[,.(value=sum(LYS),
+              value.sd=Ssum(LYS.sd)),
+             by=g_whoregion]
+
 tmp <- data.table(g_whoregion='Global',
                   value=t1r8[,sum(value)],
-                  value.sd=t1r8[,sum(value.sd)])
-
+                  value.sd=t1r8[,Ssum(value.sd)])
 t1r8 <- rbind(t1r8,tmp)
 t1r8[,quantity:='LYnewtx2020']
 
-t1r8[,.(value.sd/value,value-value.sd,value+value.sd)]
+t1r8[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
 
 save(t1r8,file=here('../figdat/t1r8.Rdata')) #lifeyears among treated
+
+
+## for HIV survivors
+SHt <- u1[,.(value=sum(alive.h),value.sd=Ssum(alive.h.sd))] #
+save(SHt,file=here('../tmpdata/SHt.Rdata'))
+
 
 ## === for table 2
 
@@ -198,68 +220,153 @@ ggsave(GP,file=here('../plots/EMRpaed.pdf'),w=6,h=6)
 
 cat(1e2*tmp1[iso3=='PAK',total]/tmp1[,sum(total)],file=here('texto/PAKinEMR.txt'))
 
+
 ## within 5 years
-c1 <- rbind(N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
+u1h <- N3[year>=2015,.(alive.h=sum(alive.h),
+            alive.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+u2h <- N3[year>=2018,.(alive.h=sum(alive.h),
+            alive.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+
+u1 <- N3[year>=2015,.(alive.0=sum(alive.0),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+u2 <- N3[year>=2018,.(alive.0=sum(alive.0),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+
+u1 <- merge(u1,u1h,by=c('iso3','g_whoregion')) #alive 5 year
+u2 <- merge(u2,u2h,by=c('iso3','g_whoregion')) #alive 2 year
+
+u1[,alive:=alive.h+alive.0];
+u2[,alive:=alive.h+alive.0]
+u1[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)];
+u2[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)]
+
+## combine
+c1 <- rbind(u1[,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
             data.table(g_whoregion='Global',
-                       N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
-
-c1h <- N3[year>=2015 & g_whoregion=='AFR',
-          .(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
-c1m <- N3[year>=2015 & sex=='Male',
-          .(total=sum(alive.t),total.sd=Ssum(alive.t.sd))]
-
-
-tmp <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion,sex)]
-tmp[,tot:=sum(total),by=g_whoregion]
-tmp[,pc:=1e2*total/tot]
-tmp <- tmp[sex=='Male']
-c2 <- rbind(tmp[,.(g_whoregion,pc)],
-            data.table(g_whoregion='Global',pc=1e2*N3[year>=2015 & sex=='Male',
-                                               sum(alive)]/
-                                              N3[year>=2015,sum(alive)])
-            )
-
-tmp <- N3[year>=2015 & agenow<15,.(total=sum(alive)),by=.(g_whoregion)]
-tmp2 <- N3[year>=2015,.(total=sum(alive)),by=.(g_whoregion)]
-tmp <- merge(tmp,tmp2,by='g_whoregion')
-tmp[,pck:=1e2*total.x/total.y]
-c4 <- rbind(tmp[,.(g_whoregion,pck)],
-            data.table(g_whoregion='Global',pck=1e2*N3[year>=2015 & agenow<15,
-                                               sum(alive)]/
-                                              N3[year>=2015,sum(alive)])
-            )
-
-## less than 2 years
-c1b <- rbind(N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
+                       u1[,.(total=sum(alive),total.sd=Ssum(alive.sd))] )  )
+c1b <- rbind(u2[,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
             data.table(g_whoregion='Global',
-                       N3[year>=2018,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
+                       u2[,.(total=sum(alive),total.sd=Ssum(alive.sd))] )  )
 
-c1hb <- N3[year>=2018 & g_whoregion=='AFR',
-           .(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
-c1mb <- N3[year>=2018 & sex=='Male',
-          .(total=sum(alive.t),total.sd=Ssum(alive.t.sd))]
-
-tmp <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion,sex)]
-tmp[,tot:=sum(total),by=g_whoregion]
-tmp[,pc:=1e2*total/tot]
-tmp <- tmp[sex=='Male']
-c2b <- rbind(tmp[,.(g_whoregion,pc)],
-            data.table(g_whoregion='Global',pc=1e2*N3[year>=2018 & sex=='Male',
-                                               sum(alive)]/
-                                              N3[year>=2018,sum(alive)])
-            )
+c1[,.(see(total),see(total-2*total.sd),see(total+2*total.sd))]
 
 
 
-tmp <- N3[year>=2018 & agenow<15,.(total=sum(alive)),by=.(g_whoregion)]
-tmp2 <- N3[year>=2018,.(total=sum(alive)),by=.(g_whoregion)]
-tmp <- merge(tmp,tmp2,by='g_whoregion')
-tmp[,pck:=1e2*total.x/total.y]
-c4b <- rbind(tmp[,.(g_whoregion,pck)],
-            data.table(g_whoregion='Global',pck=1e2*N3[year>=2018 & agenow<15,
-                                               sum(alive)]/
-                                              N3[year>=2018,sum(alive)])
-            )
+## for pc male in table 2
+u1mh <- N3[sex=='Male' & year>=2015,.(alive.h=sum(alive.h),
+            alive.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+          by=.(iso3,g_whoregion)]   #alive
+u1m <- N3[sex=='Male' & year>=2015,.(alive.0=sum(alive.0),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+u1m <- merge(u1m,u1mh,by=c('iso3','g_whoregion')) #alive 5 year
+u2mh <- N3[sex=='Male' & year>=2018,.(alive.h=sum(alive.h),
+            alive.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+          by=.(iso3,g_whoregion)]   #alive
+u2m <- N3[sex=='Male' & year>=2018,.(alive.0=sum(alive.0),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+u2m <- merge(u2m,u2mh,by=c('iso3','g_whoregion')) #alive 5 year
+
+
+u1m[,alive:=alive.h+alive.0];
+u2m[,alive:=alive.h+alive.0]
+u1m[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)];
+u2m[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)]
+
+
+## for male survivors
+u1mha <- N3[sex=='Male',.(alive.h=sum(alive.h),
+            alive.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+          by=.(iso3,g_whoregion)]   #alive
+u1ma <- N3[sex=='Male',.(alive.0=sum(alive.0),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+SMt <- merge(u1ma,u1mha,by=c('iso3','g_whoregion'))
+SMt[,alive:=alive.h+alive.0]
+SMt[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)];
+SMt <- SMt[,.(value=sum(alive),value.sd=Ssum(alive.sd))]
+
+save(SMt,file=here('../tmpdata/SMt.Rdata'))
+
+
+c1m <- rbind(u1m[,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
+             data.table(g_whoregion='Global',
+                        u1m[,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
+c1mb <- rbind(u2m[,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
+             data.table(g_whoregion='Global',
+                        u2m[,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
+
+c2 <- merge(c1m,c1,by='g_whoregion')
+c2[,pc:=1e2*total.x/total.y]
+c2 <- c2[,.(g_whoregion,pc)]
+
+c2b <- merge(c1mb,c1b,by='g_whoregion')
+c2b[,pc:=1e2*total.x/total.y]
+c2b <- c2b[,.(g_whoregion,pc)]
+
+## for pc kids in table 2
+u1kh <- N3[agenow<15 & year>=2015,.(alive.h=sum(alive.h),
+            alive.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+          by=.(iso3,g_whoregion)]   #alive
+u1k <- N3[agenow<15 & year>=2015,.(alive.0=sum(alive.0),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+u1k <- merge(u1k,u1kh,by=c('iso3','g_whoregion')) #alive 5 year
+u2kh <- N3[agenow<15 & year>=2018,.(alive.h=sum(alive.h),
+            alive.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+          by=.(iso3,g_whoregion)]   #alive
+u2k <- N3[agenow<15 & year>=2018,.(alive.0=sum(alive.0),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+         by=.(iso3,g_whoregion)]   #alive
+u2k <- merge(u2k,u2kh,by=c('iso3','g_whoregion')) #alive 5 year
+
+
+u1k[,alive:=alive.h+alive.0];
+u2k[,alive:=alive.h+alive.0]
+u1k[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)];
+u2k[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)]
+
+
+
+c4 <- rbind(u1k[,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
+             data.table(g_whoregion='Global',
+                        u1k[,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
+c4b <- rbind(u2k[,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
+             data.table(g_whoregion='Global',
+                        u2k[,.(total=sum(alive),total.sd=Ssum(alive.sd))]) )
+
+c4 <- merge(c4,c1,by='g_whoregion')
+c4[,pck:=1e2*total.x/total.y]
+c4 <- c4[,.(g_whoregion,pck)]
+
+c4b <- merge(c4b,c1b,by='g_whoregion')
+c4b[,pck:=1e2*total.x/total.y]
+c4b <- c4b[,.(g_whoregion,pck)]
+
+
+## for paediatric LYs
+u1kha <- N3[agenow<15,.(LYS.h=sum(LYS.h),
+            LYS.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
+           by=.(iso3,g_whoregion)]   #LYS
+u1ka <- N3[agenow<15,.(LYS.0=sum(LYS.0),
+            LYS.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+          by=.(iso3,g_whoregion)]   #LYS
+LYpt <- merge(u1ka,u1kha,by=c('iso3','g_whoregion'))
+LYpt[,LYS:=LYS.h+LYS.0]
+LYpt[,LYS.sd:=sqrt(LYS.h.sd^2+LYS.0.sd^2)];
+LYpt <- LYpt[,.(value=sum(LYS),value.sd=Ssum(LYS.sd))]
+
+save(LYpt,file=here('../tmpdata/LYpt.Rdata'))
+
+
+## HIV
+c1h <- u1[g_whoregion=='AFR',.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
+c1hb <- u2[g_whoregion=='AFR',.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
 
 ## age data
 cage <- N3[year>=2015,.(agenow,alive)]
@@ -306,6 +413,7 @@ save(N3RYLx,file=here('../figdat/N3RYLx.Rdata'))
 ## fig 2c
 N3[,acats:=NULL]
 N3 <- merge(N3,lamap[,.(age=age,acats)],by='age') #acats now category for age of TB
+
 N3RYLx2 <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #TODO stats for article
 N3RYLx2
 N3RYLx2[,type:="treated"]
@@ -318,7 +426,10 @@ save(txay,file=here('../figdat/txay.Rdata'))
 
 
 ## regional summary plots
-N3R <- N3[,.(alive.t=sum(alive.t),LYS.t=sum(LYS.t),
+## N3[,acat:=NULL]
+## N3 <- merge(N3,lamap[,.(age=age,acat=acats)],by='age') #acats as age TB
+N3[,acats:=NULL]
+N3R <- N3[,.(alive.t=sum(alive.t),LYS.t=sum(LYS.t), #acat not found
              alive.h=sum(alive.h),LYS.h=sum(LYS.h)),
           by=.(g_whoregion,year,sex,acat)]
 
@@ -343,15 +454,3 @@ save(txknum,file=here('../tmpdata/txknum.Rdata'))
 save(txkden,file=here('../tmpdata/txkden.Rdata'))
 save(txknumy,file=here('../tmpdata/txknumy.Rdata'))
 save(txkdeny,file=here('../tmpdata/txkdeny.Rdata'))
-
-## for paediatric LYs
-LYpt <- N3[acat %in% c('0-4','5-14'),.(value=sum(LYS.t),value.sd=sum(LYS.t.sd))]
-save(LYpt,file=here('../tmpdata/LYpt.Rdata'))
-
-## for male survivors
-SMt <- N3[sex=='Male',.(value=sum(alive.t),value.sd=Ssum(alive.t.sd))] #
-save(SMt,file=here('../tmpdata/SMt.Rdata'))
-
-## for HIV survivors
-SHt <- N3[,.(value=sum(alive.h),value.sd=Ssum(alive.h.sd))] #
-save(SHt,file=here('../tmpdata/SHt.Rdata'))
