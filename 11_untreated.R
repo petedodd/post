@@ -49,47 +49,11 @@ summary(estl[,.(alive.sd,LYS.sd)])
 ## estl[!is.finite(alive.sd),c('S.sd','LY.sd','S.0.sd','LY.0.sd','alive.sd','LYS.sd','alive.0.sd','LYS.0.sd'):=0] #safety
 ## summary(N3[,.(alive.sd,LYS.sd)])
 
-## ## totals
-## N3[!iso3 %in% hivcountries,c('alive.t',
-##                              'alive.t.sd',
-##                              'LYS.t','LYS.t.sd'):=
-##                              list(alive.0,
-##                                   alive.0.sd,
-##                                   LYS.0,
-##                                   LYS.0.sd)]
-
-## N3[iso3 %in% hivcountries,c('alive.t',
-##                              'alive.t.sd',
-##                              'LYS.t','LYS.t.sd'):=
-##                              list(alive.0 + alive.h,
-##                                   sqrt(alive.0.sd^2 + alive.h.sd^2),
-##                                   LYS.0 + LYS.h,
-##                                   sqrt(LYS.0.sd^2 + LYS.h.sd^2))]
-
-## N3[!is.finite(LYS.t.sd),c('S.sd','LYS.sd','alive.sd',
-##                           'LYS.t.sd','alive.t.sd',
-##                           'S.0.sd','LYS.0.sd','alive.0.sd',
-##                           'S.h.sd','LYS.h.sd','alive.h.sd'):=0]
-
-## N3[!is.finite(alive.t.sd)]
-
 ## sanity checks
 estl[,sum(gapl,na.rm=TRUE)]/1e6
 estl[,sum(gapls,na.rm=TRUE)]/1e6
 estl[,sum(alive,na.rm=TRUE)]/1e6
 estl[,sum(LYS,na.rm=TRUE)]/1e9
-
-
-estl[,Ssum(gapl.sd,na.rm=TRUE)]/1e6
-estl[,Ssum(gapls,na.rm=TRUE)]/1e6
-estl[,Ssum(alive,na.rm=TRUE)]/1e6
-estl[,Ssum(LYS,na.rm=TRUE)]/1e9
-
-40 *                                    #years
-  5 *                                   #million gap per year
-  0.5 *                                 #CFR
-  0.6                                   #mean survival?
-## 60 miln
 
 ## --- plots
 ## age now! NOTE

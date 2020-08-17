@@ -29,9 +29,33 @@ N3[,LYS.0:=LY.0*value*(1-H)]
 N3[,alive.h:=S.h*value*(H)]
 N3[,LYS.h:=LY.h*value*(H)]
 
+
+## checking unc
+N3[,summary(1e2*value.sd/value)]
+N3[,summary(1e2*pd.sd/pd)]
+N3[,summary(1e2*rat.sd/rat)]
+
+
+## value.sd
+tmp <- N3[,.(value=sum(value),
+             value.sd=Ssum(value.sd)),
+          by=iso3]
+
+tmp[,summary(1e2*value.sd/value)]
+
+## S.sd
+tmp <- N3[,.(value=sum(S),
+             value.sd=Ssum(S.sd)),
+          by=iso3]
+tmp[,summary(1e2*value.sd/value)]
+
+
+
 ## uncertainty TODO unc check correlations UNC jak
 N3[,alive.sd:=xfun(value,S,value.sd,S.sd)]               #not used
 N3[,LYS.sd:=xfun(LY,value,LY.sd,value.sd)]                #not used
+
+
 N3[,alive.0.sd:=xfun3(value,S.0,(1-H),value.sd,S.0.sd,H.sd)]
 N3[,LYS.0.sd:=xfun3(value,LY.0,(1-H),value.sd,LY.0.sd,H.sd)]
 N3[,alive.h.sd:=xfun3(value,S.h,H,value.sd,S.h.sd,H.sd)]
@@ -52,11 +76,6 @@ summary(N3[,.(alive.sd,LYS.sd)])
 
 
 names(N3)
-
-## N3[,alive.0.sd:=value*sqrt(S.0.sd^2*(1-H)^2 + S.0.sd^2*(H.sd^2) + S.0^2*(H.sd^2))]
-## N3[,LYS.0.sd:=value*sqrt(LY.0.sd^2*(1-H)^2 + LY.0.sd^2*(H.sd^2) + LY.0^2*(H.sd^2))]
-## N3[,alive.h.sd:=value*sqrt(S.h^2*(H.sd)^2 + S.h.sd^2*(H.sd)^2 + S.h.sd^2*(H)^2)]
-## N3[,LYS.h.sd:=value*sqrt(LY.h.sd^2*(H^2) + LY.h.sd^2*(H.sd^2) + LY.h^2*(H.sd^2))]
 
 ## totals
 N3[!iso3 %in% hivcountries,c('alive.t',
@@ -89,17 +108,53 @@ N3 <- merge(N3,lamap[,.(age,acat=acats)],by='age',all.x=TRUE)
 N3 <- merge(N3,isokey,by = 'iso3')
 
 
-## === for table 1
-t1r5 <- N3[,.(value=sum(alive.t),
-              value.sd=Ssum(alive.t.sd)),
-           by=g_whoregion]
+## country level option 2
+tmpc <- N3[,.(value=sum(alive.t),
+              value.sd=sum(alive.t.sd)), #assume perfect correlation, approximation TODO
+           by=.(iso3,g_whoregion)] #fractional unc for val same as rat
+
+t1r5c <- tmpc[,.(iso3,value,value.sd)]
+t1r5c[,quantity:='totnewtx']
+save(t1r5c,file=here('../figdat/t1r5c.Rdata'))
+
+t1r5c[,summary(1e2*value.sd/value)]
+
+## regional level
+t1r5 <- tmpc[,.(value=sum(value),
+              value.sd=Ssum(value.sd)),
+             by=g_whoregion]
+
 tmp <- data.table(g_whoregion='Global',
                   value=t1r5[,sum(value)],
                   value.sd=t1r5[,Ssum(value.sd)])
 t1r5 <- rbind(t1r5,tmp)
 t1r5[,quantity:='totnewtx2020']
 
-t1r5[,.(value.sd/value,value-value.sd,value+value.sd)]
+t1r5[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
+
+
+## ## checking unc
+## tmp <- N3[,.(value=sum(alive.t),
+##              value.sd=Ssum(alive.t.sd)),
+##           by=iso3]
+## tmp[,summary(1e2*value.sd/value)]
+
+## === for table 1
+## t1r5 <- N3[,.(value=sum(alive.t),
+##               value.sd=Ssum(alive.t.sd)),
+##            by=g_whoregion]
+
+t1r5 <- tmpc[,.(value=sum(value),
+              value.sd=Ssum(value.sd)),
+           by=g_whoregion]
+
+tmp <- data.table(g_whoregion='Global',
+                  value=t1r5[,sum(value)],
+                  value.sd=t1r5[,Ssum(value.sd)])
+t1r5 <- rbind(t1r5,tmp)
+t1r5[,quantity:='totnewtx2020']
+
+t1r5[,.(1e2*value.sd/value,see(value),see(value-value.sd*2),see(value+value.sd*2))]
 
 save(t1r5,file=here('../figdat/t1r5.Rdata')) #treated survivors
 
@@ -141,6 +196,7 @@ GP <- ggpubr::ggdotchart(tmp1, x = "iso3", y = "total",
 
 ggsave(GP,file=here('../plots/EMRpaed.pdf'),w=6,h=6)
 
+cat(1e2*tmp1[iso3=='PAK',total]/tmp1[,sum(total)],file=here('texto/PAKinEMR.txt'))
 
 ## within 5 years
 c1 <- rbind(N3[year>=2015,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],

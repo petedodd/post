@@ -209,17 +209,39 @@ summary(1e2*NNR$rat)                    #NOTE percent
 
 
 ## TODO consider uncertainty here
+## consider perfect correlation at country level
+tmpc <- TBN[,.(value=sum(val),
+              value.sd=sum(rat.sd*val)), #assume perfect correlation
+           by=.(iso3,g_whoregion)] #fractional unc for val same as rat
+
+t1r2c <- tmpc[,.(iso3,value,value.sd)]
+t1r2c[,quantity:='totnewtx']
+save(t1r2c,file=here('../figdat/t1r2c.Rdata'))
+
+t1r2c[,1e2*value.sd/value]
+
 ## UNC
-tmp <- TBN[,.(value=sum(val),
-              value.sd=Ssum((rat.sd/(rat+1e-9))*val)),
-           by=g_whoregion] #fractional unc for val same as rat
+tmp <- tmpc[,.(value=sum(value),
+               value.sd=Ssum(value.sd)), #uncorrelated
+            by=g_whoregion]
+
+tmp[,1e2*value.sd/value]
+
+
+## tmp <- TBN[,.(value=sum(val),
+##               value.sd=Ssum(rat.sd*val)),
+##            by=g_whoregion] #fractional unc for val same as rat
+
+## tmp[,1e2*value.sd/value]
+
+
 tmp2 <- data.table(g_whoregion='Global',value=tmp[,sum(value)],
                    value.sd=tmp[,Ssum(value.sd)])
 t1r2 <- rbind(tmp,tmp2)
 t1r2[,quantity:='totnewtx']
 
 ## check
-t1r2[,.(value.sd/value)]
+t1r2[,.(1e2*value.sd/value)]
 t1r2[,.(see(value),see(value-value.sd*2),see(value+value.sd*2))]               #
 
 save(t1r2,file=here('../figdat/t1r2.Rdata'))
