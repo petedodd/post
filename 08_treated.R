@@ -138,7 +138,7 @@ u2[,see(sum(LYS))]
 ## --- tx alive
 
 t1r5c <- u1[,.(iso3,value=alive,value.sd=alive.sd)]
-t1r5c[,quantity:='totnewtx']
+t1r5c[,quantity:='totnewtx2020']
 save(t1r5c,file=here('../figdat/t1r5c.Rdata'))
 
 t1r5c[,summary(1e2*value.sd/value)]
@@ -243,6 +243,10 @@ u1[,alive:=alive.h+alive.0];
 u2[,alive:=alive.h+alive.0]
 u1[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)];
 u2[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)]
+
+## HIV in AFR
+c1h <- u1[g_whoregion=='AFR',.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
+c1hb <- u2[g_whoregion=='AFR',.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
 
 ## combine
 c1 <- rbind(u1[,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
@@ -350,10 +354,10 @@ c4b <- c4b[,.(g_whoregion,pck)]
 
 
 ## for paediatric LYs
-u1kha <- N3[agenow<15,.(LYS.h=sum(LYS.h),
+u1kha <-  N3[age<15,.(LYS.h=sum(LYS.h),
             LYS.h.sd=Sssumxyz(value,S.h,H,value.sd,S.h.sd,H.sd)),
            by=.(iso3,g_whoregion)]   #LYS
-u1ka <- N3[agenow<15,.(LYS.0=sum(LYS.0),
+u1ka <- N3[age<15,.(LYS.0=sum(LYS.0),
             LYS.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
           by=.(iso3,g_whoregion)]   #LYS
 LYpt <- merge(u1ka,u1kha,by=c('iso3','g_whoregion'))
@@ -364,9 +368,6 @@ LYpt <- LYpt[,.(value=sum(LYS),value.sd=Ssum(LYS.sd))]
 save(LYpt,file=here('../tmpdata/LYpt.Rdata'))
 
 
-## HIV
-c1h <- u1[g_whoregion=='AFR',.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
-c1hb <- u2[g_whoregion=='AFR',.(total=sum(alive.h),total.sd=Ssum(alive.h.sd))]
 
 ## age data
 cage <- N3[year>=2015,.(agenow,alive)]

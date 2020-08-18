@@ -93,48 +93,21 @@ t1r1[,quantity:='totnew']
 
 t1r1[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
 
-
-## ## old
-## t1r1 <- est[,.(value=sum(e_inc_num*(1-rat)),
-##                value.sd=Ssum((ocdr.sd/ocdr)*e_inc_num*(1-rat))),
-##             by=g_whoregion] #NOTE this is new
-## tmp <- data.table(g_whoregion='Global',
-##                   value=t1r1[,sum(value)],
-##                   value.sd=t1r1[,Ssum(value.sd)])
-## t1r1 <- rbind(t1r1,tmp)
-## t1r1[,quantity:='totnew']
-
-## t1r1[,.(value.sd/value,value-value.sd,value+value.sd)]
-
 save(t1r1,file=here('../figdat/t1r1.Rdata')) #new total
 
 ## HIV
 est <- merge(est,TBH,by=c('iso3','year'))
-## est <- merge(est,NNR[,.(iso3,rat.sd)],by='iso3',all.x=TRUE)
 
-est[,value:=hs*e_inc_num*(1-rat)]
-## est[,value.sd:=xfun3(hs,e_inc_num,(1-rat),0,(ocdr.sd/ocdr)*e_inc_num,rat.sd)]
-## NHu <- est[,.(value=sum(value),value.sd=Ssum(value.sd))]
+est[,value:=hs*e_inc_num*(1-rat)]       #country year
 
 NHu <- est[,.(value=sum(value),
-              value.sd=SSSumxyz(hs,e_inc_num,(1-rat),0,(ocdr.sd/ocdr)*e_inc_num,rat.sd)
-              ),by=iso3] #cor at iso3 level
+              value.sd=xfun3(hs,e_inc_num,(1-rat),0,(ocdr.sd/ocdr)*e_inc_num,rat.sd)
+              ),by=.(iso3,year)]
 
-NHu <- est[,.(value=sum(value),value.sd=Ssum(value.sd))] #uncor across
-NHu[,value.sd/value]
+NHu <- NHu[,.(value=sum(value),value.sd=sum(value.sd)),by=iso3] #cor across iso3
+NHu <- NHu[,.(value=sum(value),value.sd=Ssum(value.sd))] #uncor across
+NHu[,1e2*value.sd/value]
 
-## ## check
-## estl[g_whoregion=='EMR',.(value=sum(gap),value.sd=Ssum(gap.sd),
-##                          Ssum(gap.sd)/sum(gap)),by=iso3] #
-
-## t1r3 <- estl[,.(value=sum(gapl),value.sd=Ssum(gapl.sd)),by=g_whoregion] #
-## tmp <- data.table(g_whoregion='Global',
-##                   value=t1r3[,sum(value)],
-##                   value.sd=t1r3[,Ssum(value.sd)])
-## t1r3 <- rbind(t1r3,tmp)
-## t1r3[,quantity:='totnotx']
-
-## t1r3[,.(value.sd/value,value-value.sd,value+value.sd)]
 
 ## NOTE gapl disaggregated over country years in uncorrelated fashion
 ## unc mainly CDR; neglect rat
@@ -162,19 +135,10 @@ t1r3[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd
 
 save(t1r3,file=here('../figdat/t1r3.Rdata')) #new untreated
 
-## old
-## t1r6 <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=g_whoregion] #
-## tmp <- data.table(g_whoregion='Global',value=t1r6[,Ssum(value)],
-##                   value.sd=t1r6[,sum(value.sd)])
-## t1r6 <- rbind(t1r6,tmp)
-## t1r6[,quantity:='totnotx2020']
-
-## t1r6[,.(value.sd/value,value-value.sd,value+value.sd)]
-
 ## NOTE age/sex disaggregation assumes no correlation <- gapl.sd by age sex
 ## alive = S * gapls = S * gapl * (1-CFR)
 tmp <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=.(iso3,g_whoregion,year)]
-tmpc <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)] #NOTE approx? TODO
+tmpc <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)] #assumed perfect correlatin
 
 t1r6c <- tmpc[,.(iso3,value,value.sd)]
 t1r6c[,quantity:='totnotx2020']
@@ -198,16 +162,50 @@ t1r6[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd
 
 save(t1r6,file=here('../figdat/t1r6.Rdata')) #untreated survivors
 
+
 ## jj
-t1r9 <- estl[,.(value=sum(LYS),value.sd=Ssum(LYS.sd)),by=g_whoregion] #
+t1r8c <- u2[,.(iso3,value=LYS,value.sd=LYS.sd)]
+
+t1r8c[,quantity:='LYnewtx2020']
+save(t1r8c,file=here('../figdat/t1r8c.Rdata'))
+
+t1r8c[,summary(1e2*value.sd/value)]
+
+## regional level
+t1r8 <- u2[,.(value=sum(LYS),
+              value.sd=Ssum(LYS.sd)),
+             by=g_whoregion]
+
+tmp <- data.table(g_whoregion='Global',
+                  value=t1r8[,sum(value)],
+                  value.sd=t1r8[,Ssum(value.sd)])
+t1r8 <- rbind(t1r8,tmp)
+t1r8[,quantity:='LYnewtx2020']
+
+t1r8[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
+
+
+## untreated LYS
+tmp <- estl[,.(value=sum(LYS),value.sd=Ssum(LYS.sd)),by=.(iso3,g_whoregion,year)] #
+tmpc <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)] #
+t1r9c <- tmp[,.(iso3,value,value.sd)]
+t1r9c[,quantity:='LYnewnotx2020']
+
+save(t1r9c,file=here('../figdat/t1r9c.Rdata'))
+
+t1r9c[,summary(1e2*value.sd/(value+1e-10))]
+
+t1r9 <- tmpc[,.(value=sum(value),value.sd=Ssum(value.sd)),by=g_whoregion] #
+
 tmp <- data.table(g_whoregion='Global',value=t1r9[,sum(value)],
                   value.sd=t1r9[,Ssum(value.sd)])
 t1r9 <- rbind(t1r9,tmp)
 t1r9[,quantity:='LYnewnotx2020']
 
-t1r9[,.(value.sd/value,value-value.sd,value+value.sd)]
+t1r9[,.(value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
 
 save(t1r9,file=here('../figdat/t1r9.Rdata')) #life-years untreated
+
 
 
 ## === figure data
@@ -262,16 +260,25 @@ save(utxknumy,file=here('../tmpdata/utxknumy.Rdata'))
 save(utxkdeny,file=here('../tmpdata/utxkdeny.Rdata'))
 
 ## for paediatric LYs
-LYpu <- estl[acat %in% c('0-4','5-14'),.(value=sum(LYS),value.sd=Ssum(LYS.sd))]
+tmp <- estl[acat %in% c('0-4','5-14'),.(value=sum(LYS),value.sd=Ssum(LYS.sd)),
+            by=.(iso3,g_whoregion,year)]
+tmp <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)]
+LYpu <- tmp[,.(value=sum(value),value.sd=Ssum(value.sd))]
 save(LYpu,file=here('../tmpdata/LYpu.Rdata'))
 
 
 ## for male survivors
-SMu <- estl[sex=='Male',.(value=sum(alive),value.sd=Ssum(alive.sd))] #
+tmp <- estl[sex=='Male',.(value=sum(alive),value.sd=Ssum(alive.sd)),
+            by=.(iso3,g_whoregion,year)]
+tmp <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)]
+SMu <- tmp[,.(value=sum(value),value.sd=Ssum(value.sd))]
 save(SMu,file=here('../tmpdata/SMu.Rdata'))
 
 ## for HIV survivors
-SHu <- estl[,.(value=sum(alive.h),value.sd=Ssum(alive.h.sd))] #
+tmp <- estl[sex=='Male',.(value=sum(alive.h),value.sd=Ssum(alive.h.sd)),
+            by=.(iso3,g_whoregion,year)]
+tmp <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)]
+SHu <- tmp[,.(value=sum(value),value.sd=Ssum(value.sd))]
 save(SHu,file=here('../tmpdata/SHu.Rdata'))
 
 ## for HIV new cases

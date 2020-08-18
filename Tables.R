@@ -153,6 +153,20 @@ print(data.frame(thing=T1$nm,pcunc=see(pcunc,ns=2)))
 
 write.csv(BB2,file=here('figs/table1u.csv'))
 
+## country level table
+## load(here('../figdat/t1r1c.Rdata'))        #Total new tuberculosis cases 1980-2019
+load(here('../figdat/t1r2c.Rdata'))       #New tuberculosis cases treated 1980-2019
+load(here('../figdat/t1r3c.Rdata'))       #New tuberculosis cases not treated 1980-2019
+## load(here('figdat/t1r4.Rdata')) # = 5 + 6 #Total tuberculosis survivors alive in 2020
+load(here('../figdat/t1r5c.Rdata'))       #Treated tuberculosis survivors alive in 2020
+load(here('../figdat/t1r6c.Rdata'))       #Untreated tuberculosis survivors alive in 2020
+## load(here('figdat/t1r7.Rdata')) # = 8 + 9 #Life-years post-tuberculosis
+load(here('../figdat/t1r8c.Rdata'))       #Life-years post-tuberculosis lived by treated
+load(here('../figdat/t1r9c.Rdata'))       #Life-years post-tuberculosis lived by untreated
+
+T1C <- rbindlist(list(t1r2c,t1r3c,t1r5c,t1r6c,t1r8c,t1r9c))
+T1C[,unique(quantity)]                  #OK
+fwrite(T1C,file=here('figs/countryest.csv'))
 
 ## ======== Table 2 ===========
 ## see Results
@@ -181,11 +195,12 @@ c2b[,pcr:=round(pc)]
 ## c4b[,age:=paste0(round(wm)," (",round(wsd),")")]
 c4b[,age:=round(pck,1)]
 
-tab2 <- merge(c1[,.(g_whoregion,total5=totf)],c2[,.(g_whoregion,pcr5=pcr)])
-tab2 <- merge(tab2,c4[,.(g_whoregion,age5=age)])
-tab2 <- merge(tab2,c1b[,.(g_whoregion,total2=totf)])
-tab2 <- merge(tab2,c2b[,.(g_whoregion,pcr2=pcr)])
-tab2 <- merge(tab2,c4b[,.(g_whoregion,age2=age)])
+tab2 <- merge(c1[,.(g_whoregion,total5=totf)],c2[,.(g_whoregion,pcr5=pcr)],
+              by='g_whoregion')
+tab2 <- merge(tab2,c4[,.(g_whoregion,age5=age)], by='g_whoregion')
+tab2 <- merge(tab2,c1b[,.(g_whoregion,total2=totf)], by='g_whoregion')
+tab2 <- merge(tab2,c2b[,.(g_whoregion,pcr2=pcr)], by='g_whoregion')
+tab2 <- merge(tab2,c4b[,.(g_whoregion,age2=age)], by='g_whoregion')
 setkey(tab2,g_whoregion)
 tab2 <- tab2[c('AFR','AMR','EMR','EUR','SEA','WPR','Global')] #reorder
 
@@ -204,7 +219,7 @@ load(file=here('../tmpdata/NHu.Rdata'))
 nmr <- c(NHu[,value],NHu[,value.sd])
 den <- c(t1r1[g_whoregion=='Global',value],t1r1[g_whoregion=='Global',value.sd])
 
-out <- pcamong(nmr,den,sf=2)
+(out <- pcamong(nmr,den,sf=2))
 
 cat(out,file=here('texto/s_HN.txt'),sep=' - ')
 
@@ -223,23 +238,14 @@ den <- c(t1r8[g_whoregion=='Global',value] + t1r9[g_whoregion=='Global',value],
          sda(t1r8[g_whoregion=='Global',value.sd],t1r9[g_whoregion=='Global',value.sd]))
 
 
-out <- c(fmtbig(nmr[1],sf=4),
+(out <- c(fmtbig(nmr[1],sf=4),
          fmtbig(nmr[1]-nmr[2]*1.96,sf=4),
          fmtbig(nmr[1]+nmr[2]*1.96,sf=4))
+)
 
 cat(out,file=here('texto/s_ply.txt'),sep=' - ')
 
-
-
-out <- c(nmr[1]/den[1],sdq(nmr[1],nmr[2],den[1],den[2]))
-out <- 1e2*out
-
-out <- c(fmtbig(out[1],sf=4),
-         fmtbig(out[1]-out[2]*1.96,sf=4),
-         fmtbig(out[1]+out[2]*1.96,sf=4))
-
-
-out <- pcamong(nmr,den)
+(out <- pcamong(nmr,den))
 
 cat(out,file=here('texto/s_plypc.txt'),sep=' - ')
 
@@ -257,7 +263,7 @@ den <- c(t1r5[g_whoregion=='Global',value] + t1r6[g_whoregion=='Global',value],
          sda(t1r5[g_whoregion=='Global',value.sd],t1r6[g_whoregion=='Global',value.sd]))
 
 
-out <- pcamong(nmr,den)
+(out <- pcamong(nmr,den))
 
 cat(out,file=here('texto/s_SEApc.txt'),sep=' - ')
 
@@ -269,7 +275,7 @@ load(file=here('../tmpdata/SMt.Rdata')) #treated
 nmr <- c(SMu[,value] + SMt[,value],
          sda(SMu[,value.sd],SMt[,value.sd]))
 
-out <- pcamong(nmr,den)
+(out <- pcamong(nmr,den))
 
 cat(out,file=here('texto/s_SMpc.txt'),sep=' - ')
 
@@ -281,7 +287,7 @@ load(file=here('../tmpdata/SHt.Rdata')) #treated
 
 nmr <- c(SHu[,value]+SHt[,value],sda(SHu[,value.sd],SHu[,value.sd]))
 
-out <- pcamong(nmr,den,sf=2)
+(out <- pcamong(nmr,den,sf=2))
 
 cat(out,file=here('texto/s_SHpc.txt'),sep=' - ')
 
@@ -329,10 +335,10 @@ load(here("../figdat/c1.Rdata")); load(here("../figdat/c1b.Rdata"))
 
 ## as % of all alive
 nmr5 <- c(c1[g_whoregion=='Global',total],
-         c1[g_whoregion=='Global',total.sd])
+          c1[g_whoregion=='Global',total.sd])
 
 nmr2 <- c(c1b[g_whoregion=='Global',total],
-         c1b[g_whoregion=='Global',total.sd])
+          c1b[g_whoregion=='Global',total.sd])
 
 out <- pcamong(nmr5,den,sf=3)
 
@@ -343,23 +349,23 @@ out <- pcamong(nmr2,den,sf=2)
 cat(out,file=here('texto/s_2pc.txt'),sep=' - ')
 
 
-## HIV among 
+## HIV among AFR last 5
 load(file=here("../figdat/c1h.Rdata")); load(file=here("../figdat/c1hb.Rdata"))
 
 nmr5 <- c(c1h[,total],
-         c1h[,total.sd])
+          c1h[,total.sd])
 
 nmr2 <- c(c1hb[,total],
-         c1hb[,total.sd])
+          c1hb[,total.sd])
 
 den5 <- c(c1[g_whoregion=='AFR',total], #AFR
-         c1[g_whoregion=='AFR',total.sd])
+          c1[g_whoregion=='AFR',total.sd])
 
 den2 <- c(c1b[g_whoregion=='AFR',total], #AFR
-         c1b[g_whoregion=='AFR',total.sd])
+          c1b[g_whoregion=='AFR',total.sd])
 
 
-out2 <- pcamong(nmr2,den2,sf=2)
+out2 <- pcamong(nmr2,den2,sf=2)         #TODO now wrong
 out5 <- pcamong(nmr5,den5,sf=2)
 
 cat(out5,file=here('texto/s_5Hpc.txt'),sep=' - ')
@@ -368,11 +374,11 @@ cat(out2,file=here('texto/s_2Hpc.txt'),sep=' - ')
 ## Male among
 load(file=here("../figdat/c1m.Rdata")); load(file=here("../figdat/c1mb.Rdata"))
 
-nmr5 <- c(c1m[,total],
-         c1m[,total.sd])
+nmr5 <- c(c1m[g_whoregion=='Global',total],
+          c1m[g_whoregion=='Global',total.sd])
 
-nmr2 <- c(c1mb[,total],
-         c1mb[,total.sd])
+nmr2 <- c(c1mb[g_whoregion=='Global',total],
+          c1mb[g_whoregion=='Global',total.sd])
 
 den5 <- c(c1[g_whoregion=='Global',total],
          c1[g_whoregion=='Global',total.sd])
@@ -382,7 +388,7 @@ den2 <- c(c1b[g_whoregion=='Global',total],
 
 
 out2 <- pcamong(nmr2,den2,sf=3)
-(out5 <- pcamong(nmr5,den5,sf=3))
+(out5 <- pcamong(nmr5,den5,sf=3))       #OK
 
 cat(out5,file=here('texto/s_5Mpc.txt'),sep=' - ')
 cat(out2,file=here('texto/s_2Mpc.txt'),sep=' - ')
