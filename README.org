@@ -1,1 +1,21 @@
 * post
+
+* Input data 
+The input data for this analysis can be found here:
+
+http://doi.org/10.5281/zenodo.3989261
+
+* TODO  update the meta-data
+- My family name needs fixing
+- link back to the repo
+
+* File structure
+This repo (post) should sit inside a parent folder. It will look in this parent folder for indata/ (the above data unzipped). Running the first analysis (000_lifetables.R) should create some working and output directories in the parent directory also.
+
+* Dependencies & analysis order
+
+This analysis was run in R version 3.6.2.
+
+Please see 000_lifetables.R and 00_utilities.R for packages that should be installed prior to running.
+
+The files should be run in the order of the bash scrip runall.sh. In a un*x encvironment, one could be ambitious and simply run this script (it may take a while). It would probably be more sensible to run each script in turn. The intended order is by the digit prefix, omitting 00_utilities.R, which is used by the following files. Finally, Tables.R and Figures.R should be run.
