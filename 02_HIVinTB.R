@@ -10,7 +10,7 @@ if(! overwrite ){
 
 ## load data
 ## WHO TB notifications
-TB <- fread(here('../indata/TB_notifications_2019-02-14.csv')
+TB <- fread(here('../indata/TB_notifications_2019-02-14.csv'))
 ## WHO TB burden estimates
 est <- fread(here('../indata/TB_burden_countries_2020-02-24.csv'))
 ## UNAIDS AIDSinfo ART coverage 4/8/2019
