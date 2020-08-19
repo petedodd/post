@@ -166,7 +166,7 @@ if(file.exists(fn)){
   load(here('../tmpdata/amap.Rdata'))
   load(here('../tmpdata/lamap.Rdata'))
   load(here('../tmpdata/isokey.Rdata'))
-  hivcountries <- scan(here('../tmpdata/hivcountries.txt'),what='character')
+  hivcountries <- scan(here('texto/hivcountries.txt'),what='character')
 } else {
   load(here('../indata/N_simple.Rdata'))           #5 year age groups
   ## make an age map between 5year ages and TB ages
@@ -176,7 +176,7 @@ if(file.exists(fn)){
   amap
   save(amap,file=here('../tmpdata/amap.Rdata'))
   ## with HIV data
-  hivcountries <- scan(here('../tmpdata/hivcountries.txt'),what='character')
+  hivcountries <- scan(here('texto/hivcountries.txt'),what='character')
   load(file=here('../tmpdata/HH.Rdata'))
   (anmz <- as.character(HH[,unique(age_name)]))
   anmzl <- c(anmz,rep(rev(anmz)[1],4))
@@ -184,7 +184,7 @@ if(file.exists(fn)){
   lamap <- amap[rep(1:20,each=5)]
   lamap[,age:=0:99]
   lamap
-  save(lamap,here('../tmpdata/lamap.Rdata'))
+  save(lamap,file=here('../tmpdata/lamap.Rdata'))
   ## make isokey
   tmp <- fread(here('../indata/TB_burden_countries_2020-02-24.csv'))
   isokey <- unique(tmp[,.(iso3,g_whoregion)])
