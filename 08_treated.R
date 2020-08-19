@@ -403,8 +403,8 @@ save(NZ,file=here('../figdat/NZ.Rdata'))
 ## fig 2b
 ## ie Years Post TB
 N3[,YPT:=2020-year]
+N3[,acats:=NULL]
 N3 <- merge(N3,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
-## N3[,acats:=NULL]
 N3RYLx <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #stats for article
 N3RYLx
 N3RYLx[,type:="treated"]
