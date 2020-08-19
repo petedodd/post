@@ -1,6 +1,4 @@
 ## combining the different notification elements
-
-
 rm(list=ls())
 library(here)
 

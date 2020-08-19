@@ -62,9 +62,6 @@ TBA[,c('tot','c_newinc'):=NULL]
 TBA[,prop:=NULL]
 TBA$acat <- factor(TBA$acat,levels=racts,ordered=TRUE)
 
-## TBA
-## save(TBA,file=here('tmpdata/TBA.Rdata'))  #TB incidence disaggregated by TB age/sex
-
 
 tmp <- TBA[,.(notes=sum(notes)),by=.(g_whoregion,Sex,acat)]
 

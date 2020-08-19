@@ -13,15 +13,6 @@ TB <- fread(here('../indata/TB_notifications_2020-02-24.csv'))
 ## TB1 <- fread('/Users/pjd/Documents/WHO_TBreports/data2018/TB_notifications_2019-02-14.csv')
 
 TBN <- TB[,.(iso3,c_newinc,year,ret_rel,g_whoregion)]       #new and relapse
-## TBN1 <- TB1[,.(iso3,c_newinc,year,ret_rel,g_whoregion)]       #new and relapse
-
-## ggplot(TBN1[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],aes(year,notes)) +
-##   geom_line()
-
-
-## ggplot(TBN[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],aes(year,notes)) +
-##   geom_line() + geom_line(data=TBN1[,.(notes=sum(c_newinc,na.rm=TRUE)),by=year],col=2)
-
 
 
 ## --- notifications -------
@@ -142,27 +133,13 @@ TBN[,c('rat.sd1',"rat.sd2"):=NULL]      #drop temp vars
 TBN
 summary(TBN)
 
-## ## impute cnewinc & restrict to new
-## TBN[,range(year)]
-## tmp <- TBN[year==2017]
-## tmp[,c('c_newinc','ret_rel'):=NA]
-## tmp[,year:=2018]
-## tmp1 <- copy(tmp)
-## tmp1[,year:=2019]
-## tmp <- rbind(tmp,tmp1)
-## TBN <- rbind(TBN,tmp)
-
 ## impute cnewinc & restrict to new
 TBN[,range(year)]
 tmp <- TBN[year==2018]
 tmp[,c('c_newinc','ret_rel'):=NA]
 tmp[,year:=2019]
-## tmp1 <- copy(tmp)
-## tmp1[,year:=2019]
-## tmp <- rbind(tmp,tmp1)
 TBN <- rbind(TBN,tmp)
 
-## TBN[iso3=='ZWE']
 
 ## imputation
 TBN[,imp:=FALSE]
