@@ -16,13 +16,16 @@ http://creativecommons.org/licenses/by/4.0/
 
 [[http://creativecommons.org/licenses/by/4.0/][https://i.creativecommons.org/l/by/4.0/88x31.png]]
 
+* File structure
+This repo folder should sit inside a parent folder. It will look in this parent folder for indata/ (see below). Running the first analysis (000_lifetables.R) should create some working and output directories in the parent directory also.
+
 * Input data 
 The input data for this analysis can be found here:
 
 http://doi.org/10.5281/zenodo.3989261
 
-* File structure
-This repo (post) should sit inside a parent folder. It will look in this parent folder for indata/ (the above data unzipped). Running the first analysis (000_lifetables.R) should create some working and output directories in the parent directory also.
+
+I inadvertently included various MacOS junk system files in this zip file. This means that you may need to fish out the folder called indata/ that actually contains the data and place this at the level above the repo folder.
 
 * Dependencies & analysis order
 
