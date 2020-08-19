@@ -15,7 +15,7 @@ library(here)
 ## make directory structure
 if(!file.exists(here('../tmpdata'))) dir.create(here('../tmpdata'))
 if(!file.exists(here('../plots'))) dir.create(here('../plots')) #NOTE subfolders
-if(!file.exists(here('../texto'))) dir.create(here('../texto'))
+if(!file.exists(here('texto'))) dir.create(here('texto'))
 if(!file.exists(here('../figdat'))) dir.create(here('../figdat'))
 
 ## subfolders for plots
@@ -84,8 +84,6 @@ cbind(agps,magps)                       #midpoints
 length(magps)
 
 TT <- TT[order(iso3,Sex,MidPeriod,AgeGrp)]
-
-## save(TT,file=here('tmpdata/TT.Rdata'))          #raw stripped data
 
 ## which countries are we talking about
 allcns <- TT[,unique(iso3)]
@@ -173,7 +171,7 @@ cat(hivcountries,file=here('texto/hivcountries.txt'))
 oldies <- ags[18:length(ags)]
 
 ## begin hiv country loop
-plt <- FALSE                            #bother saving plots or not?
+plt <- TRUE                            #bother saving plots or not?
 if(plt) file.remove(file.path(here('../plots/hiv'), list.files(here('../plots/hiv')))) #clear previous
 
 HD <- HEL <- list()
@@ -340,9 +338,6 @@ HD[,summary(mxh)]
 HD$AgeGrp <- factor(HD$AgeGrp,levels=ags,ordered = TRUE)
 HD <- HD[order(iso3,Sex,MidPeriod,AgeGrp)]
 
-
-## save(HD,file=here('tmpdata/HD.Rdata'))          #final HIV data by age/sex & year (HIV iso3)
-
 ## checks
 tst <- HD[iso3=='ZWE' & Sex=='Male' & AgeGrp=='25-29']
 plot(tst$mx0,type='b')
@@ -480,7 +475,6 @@ for(cn in cnz){
       lyv.h.m <- exp(-HR*h.h - (HR.sd*h.h)^2/2)     #log normal formulae
       lyv.h.sd <- lyv.h.m * sqrt(exp((h.h*HR.sd)^2)-1)
       LY.h.m <- sum(lyv.h.m)
-      ## LY.h.sd <- sqrt(sum(lyv.h.sd^2))  #zero correlation
       LY.h.sd <- (sum(lyv.h.sd))  #perfect correlation
       list(S=S.m,LY=LY.m,S.sd=S.sd,LY.sd=LY.sd,
            S.0=S.0.m,LY.0=LY.0.m,S.0.sd=S.0.sd,LY.0.sd=LY.0.sd,
@@ -493,14 +487,11 @@ for(cn in cnz){
 LA <- rbindlist(LA)
 LA <- LA[age<100]
 
-## LA[!iso3 %in% hivcs,c('S.h','LY.h','S.h.lo','LY.h.lo','S.h.hi','LY.h.hi'):=0]
 LA[!iso3 %in% hivcs,c('S.h','LY.h','S.h.sd','LY.h.sd'):=0]
 
 
 ## safety
 LA[,S.h:=min(S.h,S.0),by=.(iso3,year,sex,age)]
-## LA[,S.h.lo:=min(S.h.lo,S.0.lo),by=.(iso3,year,sex,age)]
-## LA[,S.h.hi:=min(S.h.hi,S.0.hi),by=.(iso3,year,sex,age)]
 
 ## save to file
 save(LA,file=here('../tmpdata/LA.Rdata'))                #
@@ -509,7 +500,7 @@ save(LA,file=here('../tmpdata/LA.Rdata'))                #
 print(LA[iso3=='AFG' & year==2000 & sex=='Male'],n=Inf)
 
 
-## NOTE probably be careful about 100 for LYs
+## NOTE be careful about 100 for LYs
 tmp <- LA[iso3=='GBR' & year==2015 & sex=='Male']
 ggplot(tmp,aes(age,S))  + geom_line()
 ggplot(tmp,aes(age,LY))  + geom_line()
@@ -523,7 +514,4 @@ ggplot(tmp,aes(age,S.h))  + geom_line()
 
 
 ggplot(tmp) + geom_line(aes(age,S.0)) + geom_line(aes(age,S),col='blue') + geom_line(aes(age,S.h),col='red') + xlab('Age in 2015') + ylab('Probability of survival to 2020')
-
-
-
 ggplot(tmp) + geom_line(aes(age,LY.0)) + geom_line(aes(age,LY),col='blue') + geom_line(aes(age,LY.h),col='red') + xlab('Age in 2015') + ylab('Expected LYs to 2020')
