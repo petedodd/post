@@ -178,7 +178,7 @@ plt <- TRUE                            #bother saving plots or not?
 if(plt) file.remove(file.path(here('../plots/hiv'), list.files(here('../plots/hiv')))) #clear previous
 
 HD <- HEL <- list()
-plt <- FALSE                            #bother saving plots or not?
+## plt <- FALSE                            #bother saving plots or not?
 for(cn in hivcountries){
   print(cn)
   ## pick country data

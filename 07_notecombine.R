@@ -66,7 +66,7 @@ N3[,range(year)]
 
 ## merge against HIV data
 lamaps <- merge(lamap,amap,by=c('AgeGrp','acats'),all.x=TRUE)
-lamaps <- lamaps[,.(age,age_name=age_name.x)]      #
+
 
 N3 <- merge(N3,lamaps,by='age',all.x=TRUE)
 names(HH)[2] <- 'sex'

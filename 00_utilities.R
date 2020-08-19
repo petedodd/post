@@ -159,7 +159,7 @@ racts <- c('0-4','5-14','15-24','25-34','35-44','45-54','55-64','65+')
 ev5 <- seq(from = 1,to=99,by=5)
 
 ## flags
-plt <- FALSE
+plt <- TRUE
 overwrite <- TRUE                      #NOTE doesn't apply to age maps in this file
 
 
