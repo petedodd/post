@@ -7,6 +7,9 @@ library(data.table)
 library(imputeTS)
 
 
+Here <- function(x) gsub("([^\\/\\.]+\\/\\.\\.\\/)","",here(x))
+
+
 absspace <- function(x,...) {             #works
    format(abs(x), ..., big.mark=" ",scientific = FALSE, trim = TRUE)
 }

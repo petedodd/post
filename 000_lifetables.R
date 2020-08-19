@@ -6,6 +6,9 @@ library(data.table)
 library(ggplot2)
 library(here)
 
+Here <- function(x) gsub("([^\\/\\.]+\\/\\.\\.\\/)","",here(x))
+
+
 ## The repo 'post' should be contained within another folder.
 ## The here package will identify a git repo as 'here'.
 ## Various other folders will be created
