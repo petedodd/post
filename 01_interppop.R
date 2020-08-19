@@ -46,7 +46,7 @@ tmp[,age:=v$x]
 GP <- ggplot(utmp,aes(amid,PopMale)) +
   geom_line(data=tmp,aes(age,ap))+
   geom_point(data=tmp,aes(age,ap),size=1) +
-  geom_point(shape=3,col=2,size=3) +
+  geom_point(shape=3,col='red',size=3) +
   xlab('Age') + ylab('Population')+
   theme_classic()
 
