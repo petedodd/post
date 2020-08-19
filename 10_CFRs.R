@@ -121,7 +121,6 @@ ggplot(estl[,.(gap=sqrt(sum(gapl.sd^2,na.rm=TRUE))/sum(gapl,na.rm=TRUE)),by=year
 
 ## NOTE gap includes relapse
 ## restrict to new
-## TODO rat uncertainty
 estl[,summary(rat)]
 estl[,gapl:=gapl * (1-rat)]
 estl[,gapl.sd:=gapl.sd * (1-rat)]

@@ -28,7 +28,7 @@ tbw[,year:=NULL]
 N2 <- merge(N2,tbw,by=c('iso3','Year','acat'),all.x = TRUE)
 
 tmp <- N2[iso3=='ZAF']
-ggplot(tmp,aes(Year,Female,col=acat)) + geom_line() #TODO
+ggplot(tmp,aes(Year,Female,col=acat)) + geom_line()
 
 N2[,NF:=PFa*Female]                     #differ in Female/Male
 N2[,NM:=PMa*Male]
@@ -38,7 +38,6 @@ N2 <- N2[!is.na(NF) & !is.na(NM)]
 N2[,sum(NF)]/1e6 + N2[,sum(NM)]/1e6     #168m
 TBA[,sum(notes)]/1e6                    #168m
 
-## TODO include sd here jak
 N3 <- melt(N2[,.(iso3,year=Year,acat,age,Male=NM,Female=NF)],
            id.vars = c('iso3','year','acat','age'))
 
@@ -53,7 +52,7 @@ N3[,value:=value * (1-pd)]
 N3[,value.sd:=value * pd.sd]            #UNC
 
 N3 <- merge(N3,NNR,by='iso3',all.x=TRUE) #
-N3[,value.sd:=xfun(value,1,value.sd,rat.sd)] #rat already included in value TODO check
+N3[,value.sd:=xfun(value,1,value.sd,rat.sd)] #rat already included in value
 
 ## N3[,value.sd:=value * pd.sd] # bug! included 2x
 N3[,sum(value)]/1e6                     #162m

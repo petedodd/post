@@ -405,7 +405,7 @@ save(NZ,file=here('../figdat/NZ.Rdata'))
 N3[,YPT:=2020-year]
 N3 <- merge(N3,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
 ## N3[,acats:=NULL]
-N3RYLx <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+N3RYLx <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #stats for article
 N3RYLx
 N3RYLx[,type:="treated"]
 
@@ -415,7 +415,7 @@ save(N3RYLx,file=here('../figdat/N3RYLx.Rdata'))
 N3[,acats:=NULL]
 N3 <- merge(N3,lamap[,.(age=age,acats)],by='age') #acats now category for age of TB
 
-N3RYLx2 <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+N3RYLx2 <- N3[,.(YPT=weighted.mean(YPT,w=alive.t)),by=.(g_whoregion,sex,acats)] #stats for article
 N3RYLx2
 N3RYLx2[,type:="treated"]
 

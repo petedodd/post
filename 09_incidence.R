@@ -42,10 +42,6 @@ cat(badfac,file=here('texto/badfac.txt'))
 
 TBN[iso3 %in% badfac,ratio:=1] #cap
 
-## TODO
-## uncertainty here in projections
-## jj
-
 
 est2000 <- est[year==2000]
 TBNx <- merge(est2000[,.(iso3,e_inc_num)],
@@ -77,9 +73,6 @@ if(plt){
            w=9,h=7)
   }
 }
-
-## TODO there are some issues here
-ggplot(est[iso3=='PAK'],aes(year,e_inc_num)) + geom_line()
 
 est[year==2017,sum(e_inc_num)/1e6]
 est[,sum(e_inc_num)/1e6,by=.(year)]

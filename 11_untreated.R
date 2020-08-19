@@ -163,7 +163,7 @@ t1r6[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd
 save(t1r6,file=here('../figdat/t1r6.Rdata')) #untreated survivors
 
 
-## jj
+## LYS
 t1r8c <- u2[,.(iso3,value=LYS,value.sd=LYS.sd)]
 
 t1r8c[,quantity:='LYnewtx2020']
@@ -229,7 +229,7 @@ save(untx,file=here('../figdat/untx.Rdata'))
 ## fig 2b
 estl <- merge(estl,lamap[,.(agenow=age,acats)],by='agenow') #acats now category for age now
 estl[,YPT:=2020-year]
-untxx <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #TODO stats for article
+untxx <- estl[,.(YPT=weighted.mean(YPT,w=alive)),by=.(g_whoregion,sex,acats)] #stats for article
 untxx[,type:="untreated"]
 
 save(untxx,file=here('../figdat/untxx.Rdata'))
