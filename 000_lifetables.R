@@ -68,9 +68,11 @@ GP <- ggplot(tmp,aes(AgeGrp,qx,col=Sex,group=Sex)) + geom_line() +
   geom_line(aes(AgeGrp,qxe,col=Sex,group=Sex),lty=2) +
   ggtitle('Dashed line use of mx as hazard, AFG 1953')
 GP
+
 ggsave(GP,filename = here('../plots/LTtest1.pdf'))
 
 GP + scale_y_log10()
+
 ggsave(GP,filename = here('../plots/LTtest1log.pdf'))
 
 ## inspect
@@ -91,6 +93,7 @@ TT <- TT[order(iso3,Sex,MidPeriod,AgeGrp)]
 ## which countries are we talking about
 allcns <- TT[,unique(iso3)]
 length(allcns)
+
 cat(allcns,file=here('texto/allcnsLT.txt'))
 
 ## smoothing experiment
@@ -153,7 +156,7 @@ oldies <- ags[18:length(ags)]
 
 
 H$age_name <- factor(H$age_name,levels=unique(H$age_name),ordered=TRUE)
-HT <- H[iso3=='GUY']                    #example
+HT <- H[iso3=='BRA']                    #example
 
 GP <- ggplot(HT,aes(year,1e2*val,col=sex_name,group=sex_name)) +
   geom_line(linetype=1) +
@@ -162,12 +165,47 @@ GP <- ggplot(HT,aes(year,1e2*val,col=sex_name,group=sex_name)) +
   facet_wrap(~age_name,scales='free_y')
 GP
 
-H[val>5e-2,unique(iso3)]
+Hthresh <- H[,.(val=max(val)),by=.(iso3)]
+Hthresh[,qplot(val)]
+Hthresh[,quantile(val,probs = 1:10/10)]
+Hthresh <- Hthresh[rev(order(val))]
+Hthresh[,rank:=1:nrow(Hthresh)]
+
+fwrite(Hthresh,file=here('texto/HIVlist.csv'))
+
+Hthresh[iso3=='BRA']                    #76
+Hthresh[rank==50]
+Hthresh[rank==50*2]
+Hthresh[val>5e-2]                       #29
+Hthresh[val>1e-2]                       #78, includes BRA
+
+tmp1 <- Hthresh[val>1e-2]
+tmp1[,percent:=1e2*val]
+
+GP <- ggpubr::ggdotchart(tmp1, x = "iso3", y = "percent",
+                         sorting = "descending",
+                         add = "segments",
+                         add.params = list(color = "black", size = 1),
+                         rotate = TRUE,
+                         dot.size = 6,
+                         label = round(tmp1$percent),
+                         font.label = list(color = "white", size = 9,vjust = 0.5)
+                         ) + ggpubr::grids() +
+              scale_y_continuous(label=scales::comma) +
+              ylab('Maximum percent HIV prevalence across years and age') +
+              xlab('Country ISO3 code')
+
+ggsave(GP,file=here('../plots/HIVcountries.pdf'),h=12,w=6)
+
+
+
+H[val>1e-2,unique(iso3)]
 
 H[,maxv:=max(val),by=iso3]
 
-H[maxv>5e-2,unique((iso3))]
-(hivcountries <- H[maxv>5e-2,unique(as.character(iso3))])
+(hivcountries <- H[maxv>1e-2,unique(as.character(iso3))]) #change to 1pc
+hivcountries <- hivcountries[hivcountries %in% unique(TT$iso3)]
+
 hivcountries <- sort(hivcountries)
 cat(hivcountries,file=here('texto/hivcountries.txt'))
 
@@ -407,8 +445,15 @@ HR.lo <- 2.21
 HR.hi <- 3.84
 HR.sd <- (HR.hi-HR.lo)/3.92
 
+## HR = 4 for everyone
+## HR = 4 only for untreated
+## HR = 2 for everyone
+## HR  5 yr + 5 yr decline
+p5a <- 1:5/5; p5b <- 1-p5a              #interpolator
+
 ## get mx for relevant ages and years (diagonal) - single country example
-PY[,{
+test <- PY[,{
+  ## basecase
   tmp <- getHzhist(year,age,2020,ZM)
   H <- sum(tmp)
   h <- cumsum(tmp)
@@ -418,8 +463,35 @@ PY[,{
   lyv.sd <- lyv.m * sqrt(exp((h*HR.sd)^2)-1)
   LY.m <- sum(lyv.m)
   LY.sd <- sqrt(sum(lyv.sd^2))
-  list(S=S.m,LY=LY.m,S.sd=S.sd,LY.sd=LY.sd)
+  ## sensitivity analyses
+  S.4m <- exp(-4*H - (4*HR.sd*H/HR)^2/2)     #assuming sd scales
+  S.2m <- exp(-2*H - (2*HR.sd*H/HR)^2/2)     #assuming sd scales
+  S.1m <- exp(-1*H - (0*HR.sd*H/HR)^2/2)     #no effect
+  n <- length(tmp)
+  slope <- rep(1/HR,n)
+  slope[1:min(n,5)] <- 1;
+  if(n>5) slope[6:min(10,n)] <- (p5b+p5a/HR)[1:min(5,n-5)];
+  tmpb <- slope * tmp; Hb <- sum(tmpb)                   #
+  S.tm <- exp(-HR*Hb - (HR.sd*Hb)^2/2)
+  ## return
+  list(S=S.m,LY=LY.m,S.sd=S.sd,LY.sd=LY.sd,S.4m,S.2m,S.1m,S.tm)
 },by=.(age,year)]
+test
+
+## testing
+ggplot(data=test,aes(S,S.4m)) + geom_point() + geom_abline(intercept = 0,slope=1,col=2)
+ggplot(data=test,aes(S,S.2m)) + geom_point() + geom_abline(intercept = 0,slope=1,col=2)
+ggplot(data=test,aes(S,S.1m)) + geom_point() + geom_abline(intercept = 0,slope=1,col=2)
+
+ggplot(data=test,aes(S,S.tm)) + geom_point() + geom_abline(intercept = 0,slope=1,col=2)
+
+
+ggplot(data=test[year==1970],aes(S,S.tm,col=age)) +
+  geom_point() + geom_abline(intercept = 0,slope=1,col=2)
+
+ggplot(data=test[age==60],aes(S,S.tm,col=year)) +
+  geom_point() + geom_abline(intercept = 0,slope=1,col=2)
+
 
 
 ## loop to compute survival tables across all countries
@@ -479,9 +551,33 @@ for(cn in cnz){
       lyv.h.sd <- lyv.h.m * sqrt(exp((h.h*HR.sd)^2)-1)
       LY.h.m <- sum(lyv.h.m)
       LY.h.sd <- (sum(lyv.h.sd))  #perfect correlation
+      ## sensitivity analyses
+      S.4m <- exp(-4*H - (4*HR.sd*H/HR)^2/2)     #assuming sd scales
+      S.2m <- exp(-2*H - (2*HR.sd*H/HR)^2/2)     #assuming sd scales
+      S.1m <- exp(-1*H - (0*HR.sd*H/HR)^2/2)     #no effect
+      S.4m.0 <- exp(-4*H.0 - (4*HR.sd*H.0/HR)^2/2) #HIV -ve
+      S.2m.0 <- exp(-2*H.0 - (2*HR.sd*H.0/HR)^2/2)
+      S.1m.0 <- exp(-1*H.0 - (0*HR.sd*H.0/HR)^2/2)
+      S.4m.h <- exp(-4*H.h - (4*HR.sd*H.h/HR)^2/2) #HIV +ve
+      S.2m.h <- exp(-2*H.h - (2*HR.sd*H.h/HR)^2/2)
+      S.1m.h <- exp(-1*H.h - (0*HR.sd*H.h/HR)^2/2)
+      ## time-varying
+      n <- length(tmp)
+      slope <- rep(1/HR,n)
+      slope[1:min(n,5)] <- 1;
+      if(n>5) slope[6:min(10,n)] <- (p5b+p5a/HR)[1:min(5,n-5)];
+      tmpb <- slope * tmp; Hb <- sum(tmpb)                   #total
+      S.tm <- exp(-HR*Hb - (HR.sd*Hb)^2/2)
+      tmpb <- slope * tmp0; Hb <- sum(tmpb)                   #HIV-ve
+      S.tm0 <- exp(-HR*Hb - (HR.sd*Hb)^2/2)
+      tmpb <- slope * tmph; Hb <- sum(tmpb)                   #HIV-ve
+      S.tmh <- exp(-HR*Hb - (HR.sd*Hb)^2/2)
+      ## return
       list(S=S.m,LY=LY.m,S.sd=S.sd,LY.sd=LY.sd,
            S.0=S.0.m,LY.0=LY.0.m,S.0.sd=S.0.sd,LY.0.sd=LY.0.sd,
-           S.h=S.h.m,LY.h=LY.h.m,S.h.sd=S.h.sd,LY.h.sd=LY.h.sd)
+           S.h=S.h.m,LY.h=LY.h.m,S.h.sd=S.h.sd,LY.h.sd=LY.h.sd,
+           S.4m,S.2m,S.1m,S.4m.0,S.2m.0,S.1m.0,S.4m.h,S.2m.h,S.1m.h,
+           S.tm,S.tm0,S.tmh)
     },by=.(age,year)]
     tdf[,c('iso3','sex'):=list(cn,sx)]
     LA[[k]] <- tdf
