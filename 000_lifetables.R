@@ -31,6 +31,8 @@ if(!file.exists(here('../plots/inc'))) dir.create(here('../plots/inc'))
 ## lifetable data
 load(here('../indata/LT.Rdata'))                  #data from UN WPP2019
 load(here('../indata/H.Rdata'))           #IHME HIV data
+load(here('../indata/N_simple.Rdata'))           #IHME HIV data
+N <- N[Year==2020,.(tot=sum(PopTotal)),by=iso3]  #for total populations 2020
 
 LT[,iso3:=countrycode::countrycode(LocID,origin='un',destination='iso3c')]
 
@@ -170,6 +172,7 @@ Hthresh[,qplot(val)]
 Hthresh[,quantile(val,probs = 1:10/10)]
 Hthresh <- Hthresh[rev(order(val))]
 Hthresh[,rank:=1:nrow(Hthresh)]
+Hthresh <- merge(Hthresh,N,by='iso3',all.x=TRUE,all.y=FALSE)
 
 fwrite(Hthresh,file=here('texto/HIVlist.csv'))
 
@@ -179,7 +182,10 @@ Hthresh[rank==50*2]
 Hthresh[val>5e-2]                       #29
 Hthresh[val>1e-2]                       #78, includes BRA
 
-tmp1 <- Hthresh[val>1e-2]
+Hthresh[!(is.na(tot) | tot<1e3) & (val>1e-2)] #also includes pop > 1 million
+
+
+tmp1 <- Hthresh[!(is.na(tot) | tot<1e3) & (val>1e-2)]
 tmp1[,percent:=1e2*val]
 
 GP <- ggpubr::ggdotchart(tmp1, x = "iso3", y = "percent",
@@ -197,13 +203,11 @@ GP <- ggpubr::ggdotchart(tmp1, x = "iso3", y = "percent",
 
 ggsave(GP,file=here('../plots/HIVcountries.pdf'),h=12,w=6)
 
-
-
 H[val>1e-2,unique(iso3)]
-
 H[,maxv:=max(val),by=iso3]
 
-(hivcountries <- H[maxv>1e-2,unique(as.character(iso3))]) #change to 1pc
+(hivcountries <- tmp1[,unique(iso3)]) #change to 1pc & >1million
+## (hivcountries <- H[maxv>1e-2,unique(as.character(iso3))]) #change to 1pc
 hivcountries <- hivcountries[hivcountries %in% unique(TT$iso3)]
 
 hivcountries <- sort(hivcountries)

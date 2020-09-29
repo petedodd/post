@@ -32,7 +32,7 @@ WH2 <- rbind(WH,data.table(year=xtrayr,iso3=rep(unique(WH$iso3),
                            e_tbhiv_prct=NA,e_tbhiv_prct_lo=NA,e_tbhiv_prct_hi=NA))
 
 WH2 <- WH2[order(iso3,year)]
-WH2[year<1990,e_tbhiv_prct:=1e-10]
+WH2[year<=1981,e_tbhiv_prct:=1e-10]
 
 WH2[iso3=='BWA']
 
@@ -52,7 +52,7 @@ GP <- ggplot(WH2,aes(year,e_tbhiv_prct)) +
 GP
 
 if(plt) ggsave(GP,file=here('../plots/HIVinTBinterp.pdf'),w=10,h=10)
-
+## TODO TLS?
 
 TBH <- WH2[,.(iso3,year,hs=e_tbhiv_prct/100)] #using new version
 
@@ -97,8 +97,13 @@ TBH <- merge(TBH,ACM[,.(iso3,year,haa=value/1e2)],
              by=c('iso3','year'),all.x=TRUE,all.y=FALSE)
 
 TBH[year<=2000,haa:=1e-10]
-TBH[iso3=='PRT',haa:=hsa]               #all NA
-TBH[,haa:=na_kalman(haa),by=iso3]
+TBH[,.N,by=iso3]
+TBH[,sum(is.na(haa)),by=iso3]
+## FSM, USA, VUT
+now <- c('FSM', 'USA', 'VUT')
+usered <- c('ARE','BHS','BLZ','EST','PAN','PRT','RUS','URY','VCT')
+TBH[iso3 %in% usered,haa:=hsa]               #nothing to aim for
+TBH[,haa:=na_kalman(haa),by=iso3]       #TODO
 
 TBH[haa<0,haa:=1e-10]
 TBH[haa>.90,haa:=.90]
