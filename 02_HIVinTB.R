@@ -39,6 +39,7 @@ WH2[iso3=='BWA']
 yrz <- unique(WH2$year)                 #last 2 years added
 
 WH2[,e_tbhiv_prct:=na_kalman(e_tbhiv_prct),by=iso3]
+WH2[e_tbhiv_prct<0,e_tbhiv_prct:=1e-10]     #safety
 
 
 GP <- ggplot(WH2,aes(year,e_tbhiv_prct)) +
@@ -52,26 +53,26 @@ GP <- ggplot(WH2,aes(year,e_tbhiv_prct)) +
 GP
 
 if(plt) ggsave(GP,file=here('../plots/HIVinTBinterp.pdf'),w=10,h=10)
-## TODO TLS?
+
 
 TBH <- WH2[,.(iso3,year,hs=e_tbhiv_prct/100)] #using new version
-
-ggplot(WH2,aes(year,e_tbhiv_prct,col=is.na(e_tbhiv_prct_lo))) + geom_point() + facet_wrap(~iso3)
-
-
-
+## ggplot(WH2,aes(year,e_tbhiv_prct,col=is.na(e_tbhiv_prct_lo))) + geom_point() + facet_wrap(~iso3)
 TB[!is.na(hiv_art),.(iso3,year,newrel_hivpos,newrel_art,hivtest_pos,hiv_art)]
-
 TBH <- merge(TBH,TB[!is.na(hiv_art),.(iso3,year,hsa=hiv_art/hivtest_pos)],
              by=c('iso3','year'),all.x = TRUE,all.y=FALSE)
 
-TBH[year<=2000,hsa:=1e-10]
-TBH[is.nan(hsa),hsa:=NA]
-TBH[,hsa:=na_kalman(hsa),by=iso3]
-TBH[hsa<0,hsa:=1e-10]
-TBH[hsa>.90,hsa:=.90]
-TBH[,hsa:=smooth(hsa),by=iso3]
+TBH[,nacount:=sum(is.na(hsa)),by=iso3]
+bad <- TBH[nacount==41,unique(iso3)]    #ESP, ITA, USA
 
+for(cn in setdiff(TBH[,unique(iso3)],bad)){
+  print(cn)
+  TBH[iso3==cn & year<=2000,hsa:=1e-10]
+  TBH[iso3==cn & !is.finite(hsa),hsa:=NA]
+  TBH[iso3==cn,hsa:=na_kalman(hsa)]
+  TBH[iso3==cn & hsa<0,hsa:=1e-10]
+  TBH[iso3==cn & hsa>.90,hsa:=.90]
+  TBH[iso3==cn,hsa:=smooth(hsa)]
+}
 
 
 ## working with UNAIDS data
@@ -96,14 +97,24 @@ ACM[,year:=as.integer(as.character(variable))]
 TBH <- merge(TBH,ACM[,.(iso3,year,haa=value/1e2)],
              by=c('iso3','year'),all.x=TRUE,all.y=FALSE)
 
-TBH[year<=2000,haa:=1e-10]
-TBH[,.N,by=iso3]
-TBH[,sum(is.na(haa)),by=iso3]
+TBH0 <- copy(TBH)
+
+TBH <- copy(TBH0)
+
 ## FSM, USA, VUT
-now <- c('FSM', 'USA', 'VUT')
-usered <- c('ARE','BHS','BLZ','EST','PAN','PRT','RUS','URY','VCT')
-TBH[iso3 %in% usered,haa:=hsa]               #nothing to aim for
-TBH[,haa:=na_kalman(haa),by=iso3]       #TODO
+nowt <- c('USA')
+v <- TBH[iso3 =='ARG',hsa]
+TBH[iso3 =='USA',hsa:=v]                #swap out
+
+usered <- c('ARE','EST','PAN','PRI','PRT','RUS','URY','VCT')
+cat(usered,file=here('texto/usered.txt'))
+TBH[iso3 %in% usered,haa:=hsa]
+
+TBH[year<=2000,haa:=1e-10]
+
+for(cn in setdiff(TBH[,unique(iso3)],c(nowt,usered))){
+  TBH[iso3==cn,haa:=na_kalman(haa)]
+}
 
 TBH[haa<0,haa:=1e-10]
 TBH[haa>.90,haa:=.90]
