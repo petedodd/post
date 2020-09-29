@@ -61,8 +61,24 @@ TB[!is.na(hiv_art),.(iso3,year,newrel_hivpos,newrel_art,hivtest_pos,hiv_art)]
 TBH <- merge(TBH,TB[!is.na(hiv_art),.(iso3,year,hsa=hiv_art/hivtest_pos)],
              by=c('iso3','year'),all.x = TRUE,all.y=FALSE)
 
+TBH[,.N,by=iso3]
+
+## a couple of countries are missing years altogether: add in
+yy <- TBH[,range(year)]
+yy <- yy[1]:yy[2]
+missed <- list()
+for(cn in TBH[,unique(iso3)]){
+  df <- setdiff(yy,TBH[iso3==cn,year])
+  if(length(df)>0) missed[[cn]] <- data.table(iso3=cn,year=df)
+}
+missed <- rbindlist(missed)
+missed[,c('hs','hsa'):=NA]
+TBH <- rbind(TBH,missed)
+TBH[,hs:=na_kalman(hs),by=iso3]
+
+TBH[,.N,by=iso3]                        #check all same
 TBH[,nacount:=sum(is.na(hsa)),by=iso3]
-bad <- TBH[nacount==41,unique(iso3)]    #ESP, ITA, USA
+(bad <- TBH[nacount==41,unique(iso3)])    #ESP, ITA, USA
 
 for(cn in setdiff(TBH[,unique(iso3)],bad)){
   print(cn)
@@ -73,7 +89,7 @@ for(cn in setdiff(TBH[,unique(iso3)],bad)){
   TBH[iso3==cn & hsa>.90,hsa:=.90]
   TBH[iso3==cn,hsa:=smooth(hsa)]
 }
-
+TBH[,.N,by=iso3]                        #check all same
 
 ## working with UNAIDS data
 cz <- c(1,1+seq(from=1,by=3,len=10))
@@ -94,12 +110,12 @@ ACN[iso3=='SWZ',`2019`:=95]
 ACM <- melt(ACN,id='iso3')
 ACM[,year:=as.integer(as.character(variable))]
 
+
 TBH <- merge(TBH,ACM[,.(iso3,year,haa=value/1e2)],
              by=c('iso3','year'),all.x=TRUE,all.y=FALSE)
 
-TBH0 <- copy(TBH)
-
-TBH <- copy(TBH0)
+TBH[,.N,by=iso3]                        #check all same
+TBH[iso3=='ZWE']
 
 ## FSM, USA, VUT
 nowt <- c('USA')
@@ -112,6 +128,7 @@ TBH[iso3 %in% usered,haa:=hsa]
 
 TBH[year<=2000,haa:=1e-10]
 
+## interpolate rest
 for(cn in setdiff(TBH[,unique(iso3)],c(nowt,usered))){
   TBH[iso3==cn,haa:=na_kalman(haa)]
 }
@@ -132,6 +149,5 @@ GP <- ggplot(TBH,aes(year,1e2*hs)) +
 GP
 
 if(plt)ggsave(GP,file=here('../plots/HIVinTBinterp2.pdf'),w=10,h=10)
-
 
 save(TBH,file=here('../tmpdata/TBH.Rdata'))

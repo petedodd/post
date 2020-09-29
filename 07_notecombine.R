@@ -58,7 +58,29 @@ N3[,summary(value/value0)]              #deaths out
 N3[is.na(value/value0),.(iso3,value,value0)]
 
 ## merge in HIV data
-N3 <- merge(N3,TBH,by=c('iso3','year'),all.x=TRUE)
+## setkey(TBH,iso3,year)
+## TBH[N3[iso3=='BRA',.(iso3,year)]]
+## was N3
+N22 <- merge(N3,TBH,by=c('iso3','year'),all.x=TRUE,all.y=FALSE,allow.cartesian = TRUE)
+nrow(TBH)
+nrow(N3)
+nrow(N22)
+setdiff(N3[,unique(iso3)],N22[,unique(iso3)])
+setdiff(N22[,unique(iso3)],N3[,unique(iso3)])
+setdiff(N22[,unique(year)],N3[,unique(year)])
+test <- N3[,.N,by=iso3]
+test[N!=8000]
+test2 <- N22[,.N,by=iso3]
+test2[N!=8000]                          #HIV countries added
+TBH[,.N,by=iso3]
+y1 <- TBH[iso3=='AGO'][,year]
+y2 <- TBH[iso3=='TLS'][,year]
+setdiff(y1,y2)
+
+test3 <- N22[iso3=='ZWE' & sex=='Male',.(year,age)]
+test3[,.N,by=.(year,age)][N!=1]
+unique(test3)
+
 N3[is.na(hs),hs:=0]
 N3[,range(year)]
 
