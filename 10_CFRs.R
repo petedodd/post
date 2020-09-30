@@ -214,3 +214,40 @@ estl[,Ssum(gapls.sd)]
 estl[,sqrt(sum(gapls.0.sd^2) + sum(gapls.h.sd^2))]
 
 save(estl,file=here('../tmpdata/estl.Rdata'))
+
+## checking per capita-ness
+load(here('../indata/N_simple.Rdata'))
+pop <- N[Year>=1980 & Year<2020,.(tot=sum(PopTotal*1e3)),by=.(iso3,year=Year)]
+pop[year==2019,sum(tot)]/1e9
+
+chk <- unique(estl[,.(e_inc_num,iso3,year)])
+chk
+chk[,sum(e_inc_num),by=year]
+chk <- merge(chk,pop,by=c('iso3','year'))
+chk <- merge(chk,TBH[,.(iso3,year,hs)],by=c('iso3','year'))
+chk <- merge(chk,est[,.(iso3,year,fsd=ocdr.sd/ocdr)],by=c('iso3','year'))
+
+chks <- chk[,.(inc=sum(e_inc_num),
+               inc.nh=sum(e_inc_num*(1-hs)),
+               inc.sd=sqrt(sum((e_inc_num*fsd)^2)),
+               tot=sum(tot)),
+            by=year]
+
+chks[,percap:=1e5*inc/tot]
+chks[,percap.sd:=1e5*inc.sd/tot]
+chks[,percap.nh:=1e5*inc.nh/tot]
+chks
+
+ggplot(chks,aes(year,percap)) +
+  geom_ribbon(aes(year,ymin=percap-2*percap.sd,ymax=percap+2*percap.sd),
+              fill='grey',alpha=.2,col=NA)+
+  geom_ribbon(aes(year,ymin=percap.nh-2*percap.sd*percap.nh/percap,
+                  ymax=percap.nh+2*percap.sd*percap.nh/percap),
+              fill='grey',alpha=.2,col=NA)+
+  geom_line() +
+  geom_line(aes(year,percap.nh),lty=2) +
+  expand_limits(y=c(0,250)) +
+  ylab('TB incidence per 100,000 per year') + xlab('Year') +
+  theme_classic() 
+
+ggsave(filename = here('../plots/Wpc.png'),w=7,h=5)
