@@ -30,6 +30,12 @@ estl[,LYS.0:=LY.0*gapls.0]
 estl[,LYS.h:=LY.h*gapls.h]
 estl[,LYS:=LYS.h + LYS.0]
 
+## SAs
+estl[,alive.2:=(S.2m.0 * gapls.0 + S.2m.h * gapls.h)]
+estl[,alive.4:=(S.4m.0 * gapls.0 + S.4m.h * gapls.h)]
+estl[,alive.d:=(S.tm0 * gapls.0 + S.tmh * gapls.h)]
+
+
 ## uncertainty
 estl[,alive.0.sd:=xfun(S.0,gapls.0,S.0.sd,gapls.0.sd)]
 estl[,alive.h.sd:=xfun(S.h,gapls.h,S.h.sd,gapls.h.sd)]
@@ -52,8 +58,11 @@ summary(estl[,.(alive.sd,LYS.sd)])
 ## sanity checks
 estl[,sum(gapl,na.rm=TRUE)]/1e6
 estl[,sum(gapls,na.rm=TRUE)]/1e6
-estl[,sum(alive,na.rm=TRUE)]/1e6
 estl[,sum(LYS,na.rm=TRUE)]/1e9
+estl[,sum(alive,na.rm=TRUE)]/1e6
+estl[,sum(alive.2,na.rm=TRUE)]/1e6
+estl[,sum(alive.4,na.rm=TRUE)]/1e6
+estl[,sum(alive.d,na.rm=TRUE)]/1e6
 
 ## --- plots
 ## age now! NOTE
@@ -137,8 +146,12 @@ save(t1r3,file=here('../figdat/t1r3.Rdata')) #new untreated
 
 ## NOTE age/sex disaggregation assumes no correlation <- gapl.sd by age sex
 ## alive = S * gapls = S * gapl * (1-CFR)
-tmp <- estl[,.(value=sum(alive),value.sd=Ssum(alive.sd)),by=.(iso3,g_whoregion,year)]
-tmpc <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)] #assumed perfect correlatin
+tmp <- estl[,.(value=sum(alive),
+               value.2=sum(alive.2),value.4=sum(alive.4),value.d=sum(alive.d),
+               value.sd=Ssum(alive.sd)),by=.(iso3,g_whoregion,year)]
+tmpc <- tmp[,.(value=sum(value),
+               value.2=sum(value.2),value.4=sum(value.4),value.d=sum(value.d),
+               value.sd=sum(value.sd)),by=.(iso3,g_whoregion)] #assumed perfect correlation
 
 t1r6c <- tmpc[,.(iso3,value,value.sd)]
 t1r6c[,quantity:='totnotx2020']
@@ -148,11 +161,14 @@ t1r6c[,summary(1e2*value.sd/value)]
 
 ## regional level
 t1r6 <- tmpc[,.(value=sum(value),
-              value.sd=Ssum(value.sd)),
+                value.2=sum(value.2),value.4=sum(value.4),value.d=sum(value.d),
+                value.sd=Ssum(value.sd)),
              by=g_whoregion]
 
 tmp <- data.table(g_whoregion='Global',
                   value=t1r6[,sum(value)],
+                  value.2=sum(t1r6$value.2),value.4=sum(t1r6$value.4),
+                  value.d=sum(t1r6$value.d),
                   value.sd=t1r6[,Ssum(value.sd)])
 t1r6 <- rbind(t1r6,tmp)
 t1r6[,quantity:='totnew']
