@@ -227,6 +227,8 @@ chk <- merge(chk,pop,by=c('iso3','year'))
 chk <- merge(chk,TBH[,.(iso3,year,hs)],by=c('iso3','year'))
 chk <- merge(chk,est[,.(iso3,year,fsd=ocdr.sd/ocdr)],by=c('iso3','year'))
 
+save(chk,file=here('../tmpdata/chk.Rdata'))
+
 chks <- chk[,.(inc=sum(e_inc_num),
                inc.nh=sum(e_inc_num*(1-hs)),
                inc.sd=sqrt(sum((e_inc_num*fsd)^2)),
@@ -251,3 +253,16 @@ ggplot(chks,aes(year,percap)) +
   theme_classic() 
 
 ggsave(filename = here('../plots/Wpc.png'),w=7,h=5)
+
+
+
+ggplot(chks,aes(year,percap.nh)) +
+  geom_ribbon(aes(year,ymin=percap.nh-2*percap.sd*percap.nh/percap,
+                  ymax=percap.nh+2*percap.sd*percap.nh/percap),
+              fill='grey',alpha=.2,col=NA)+
+  geom_line() +
+  expand_limits(y=c(0,250)) +
+  ylab('HIV negative TB incidence per 100,000 per year') + xlab('Year') +
+  theme_classic() 
+
+ggsave(filename = here('../plots/Wpc2.png'),w=7,h=5)

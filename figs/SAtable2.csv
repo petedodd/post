@@ -1,0 +1,15 @@
+Region,quantity,basecase,HR=2,HR=4,dynamic HR
+AFR,treated last 5 years, 4 990 000, 5 160 000, 4 820 000, 5 000 000
+AMR,treated last 5 years,   958 000,   983 000,   931 000,   958 000
+EMR,treated last 5 years, 2 270 000, 2 330 000, 2 210 000, 2 270 000
+EUR,treated last 5 years,   978 000, 1 010 000,   948 000,   978 000
+SEA,treated last 5 years,12 400 000,12 800 000,12 100 000,12 400 000
+WPR,treated last 5 years, 5 790 000, 5 990 000, 5 600 000, 5 800 000
+Global,treated last 5 years,27 400 000,28 200 000,26 600 000,27 400 000
+AFR,treated last 2 years, 2 170 000, 2 210 000, 2 120 000, 2 170 000
+AMR,treated last 2 years,   408 000,   415 000,   400 000,   408 000
+EMR,treated last 2 years,   969 000,   985 000,   951 000,   969 000
+EUR,treated last 2 years,   377 000,   384 000,   369 000,   377 000
+SEA,treated last 2 years, 5 760 000, 5 870 000, 5 650 000, 5 760 000
+WPR,treated last 2 years, 2 510 000, 2 560 000, 2 440 000, 2 510 000
+Global,treated last 2 years,12 200 000,12 400 000,11 900 000,12 200 000

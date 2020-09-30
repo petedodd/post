@@ -69,7 +69,8 @@ load(here('../figdat/t1r6.Rdata'))       #Untreated tuberculosis survivors alive
 load(here('../figdat/t1r8.Rdata'))         #Life-years post-tuberculosis lived by treated
 load(here('../figdat/t1r9.Rdata'))       #Life-years post-tuberculosis lived by untreated
 
-t1r4 <- merge(t1r5,t1r6,by='g_whoregion')
+t1r4 <- merge(t1r5[,.(g_whoregion,value,value.sd,quantity)],
+              t1r6[,.(g_whoregion,value,value.sd,quantity)],by='g_whoregion')
 t1r7 <- merge(t1r8,t1r9,by='g_whoregion')
 t1r4[,value:=value.x+value.y]; t1r7[,value:=value.x+value.y]
 t1r4[,value.sd:=sqrt(value.sd.x^2+value.sd.y^2)];
@@ -84,10 +85,12 @@ t1r1[,rn:=1]; t1r2[,rn:=2]; t1r3[,rn:=3]
 t1r4[,rn:=4]; t1r5[,rn:=5]; t1r6[,rn:=6]
 t1r7[,rn:=7]; t1r8[,rn:=8]; t1r9[,rn:=9]
 
-## 2 missing SD
-## t1r2[,value.sd:=0]
+## SAs: 4,5,6
 
-t1 <- rbindlist(list(t1r1,t1r2,t1r3,t1r4,t1r5,t1r6,t1r7,t1r8,t1r9),use.names = TRUE)
+t1 <- rbindlist(list(t1r1,t1r2,t1r3,t1r4,
+                     t1r5[,.(g_whoregion,value,value.sd,quantity,rn)],
+                     t1r6[,.(g_whoregion,value,value.sd,quantity,rn)],
+                     t1r7,t1r8,t1r9),use.names = TRUE)
 
 namekey <- data.table(rn=1:9,
                       nm=c('Total new tuberculosis cases 1980-2019',
@@ -340,11 +343,11 @@ nmr5 <- c(c1[g_whoregion=='Global',total],
 nmr2 <- c(c1b[g_whoregion=='Global',total],
           c1b[g_whoregion=='Global',total.sd])
 
-out <- pcamong(nmr5,den,sf=3)
+(out <- pcamong(nmr5,den,sf=3))
 
 cat(out,file=here('texto/s_5pc.txt'),sep=' - ')
 
-out <- pcamong(nmr2,den,sf=2)
+(out <- pcamong(nmr2,den,sf=2))
 
 cat(out,file=here('texto/s_2pc.txt'),sep=' - ')
 
@@ -365,8 +368,8 @@ den2 <- c(c1b[g_whoregion=='AFR',total], #AFR
           c1b[g_whoregion=='AFR',total.sd])
 
 
-out2 <- pcamong(nmr2,den2,sf=2)         #TODO now wrong
-out5 <- pcamong(nmr5,den5,sf=2)
+(out2 <- pcamong(nmr2,den2,sf=2))
+(out5 <- pcamong(nmr5,den5,sf=2))
 
 cat(out5,file=here('texto/s_5Hpc.txt'),sep=' - ')
 cat(out2,file=here('texto/s_2Hpc.txt'),sep=' - ')
@@ -387,7 +390,7 @@ den2 <- c(c1b[g_whoregion=='Global',total],
          c1b[g_whoregion=='Global',total.sd])
 
 
-out2 <- pcamong(nmr2,den2,sf=3)
+(out2 <- pcamong(nmr2,den2,sf=3))
 (out5 <- pcamong(nmr5,den5,sf=3))       #OK
 
 cat(out5,file=here('texto/s_5Mpc.txt'),sep=' - ')
@@ -415,3 +418,41 @@ out2 <- c(quantile(cagelb$agenow,0.5),
 
 cat(out2,file=here('texto/s_2ageQ.txt'),sep=' - ')
 cat(out5,file=here('texto/s_5ageQ.txt'),sep=' - ')
+
+
+## SAs -----
+## sensitivity ananlyses around HR
+svvs1 <- t1r5[,.(g_whoregion,value,value.2,value.4,value.d)]
+svvs2 <- t1r6[,.(g_whoregion,value,value.2,value.4,value.d)]
+svvs1[,quantity:='Treated survivors']; svvs2[,quantity:='Untreated survivors']
+svvs <- rbind(svvs1,svvs2)
+names(svvs)[2:5] <- c('basecase','HR=2','HR=4','dynamic HR')
+names(svvs)[1] <- 'Region'
+
+
+svvo <- svvs[,lapply(.SD,fmtbig),.SDcols=2:5]
+svvo <- cbind(Region=svvs$Region,svvo)
+
+fwrite(svvo,file=here('figs/SAtable1.csv'))
+
+## treated surv, untreated surv
+## <5, <2
+load(here("../figdat/c1sa.Rdata")); load(here("../figdat/c1bsa.Rdata"))
+
+c1o <- c1[,.(g_whoregion,total)]
+c1o <- merge(c1o,c1sa[,.(g_whoregion,total.2,total.4,total.d)],by='g_whoregion')
+c1o[,quantity:='treated last 5 years']
+c2o <- c1b[,.(g_whoregion,total)]
+c2o <- merge(c2o,c1bsa[,.(g_whoregion,total.2,total.4,total.d)],by='g_whoregion')
+c2o[,quantity:='treated last 2 years']
+setkey(c1o,g_whoregion)
+setkey(c2o,g_whoregion)
+
+csab <- rbind(c1o[wrk$g_whoregion],c2o[wrk$g_whoregion])
+csab <- csab[,.(g_whoregion,quantity,total,total.2,total.4,total.d)]
+names(csab) <- c('Region','quantity','basecase','HR=2','HR=4','dynamic HR')
+
+sa2 <- csab[,lapply(.SD,fmtbig),.SDcols=3:6]
+sa2 <- cbind(csab[,.(Region,quantity)],sa2)
+
+fwrite(sa2,file=here('figs/SAtable2.csv'))

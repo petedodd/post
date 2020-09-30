@@ -1,5 +1,4 @@
 ## this file is for processing and presenting results
-
 rm(list=ls())
 
 library(ggplot2);theme_set(theme_bw())
@@ -59,12 +58,17 @@ load(file=here('../tmpdata/utxknumy.Rdata'))
 load(file=here('../tmpdata/utxkdeny.Rdata'))
 
 ## output?
-1e2*txknum/txkden #1e2*N3[acat %in% c('0-4','5-14'),sum(alive.t)]/N3[,sum(alive.t)]
-1e2*utxknum/utxkden#*estl[acat %in% c('0-4','5-14'),sum(alive)]/estl[,sum(alive)]
+##1e2*N3[acat %in% c('0-4','5-14'),sum(alive.t)]/N3[,sum(alive.t)]
+##*estl[acat %in% c('0-4','5-14'),sum(alive)]/estl[,sum(alive)]
+(v <- 1e2*txknum/txkden)
+cat(v,file=here('texto/txknum_txkden.txt'))
+(v <- 1e2*utxknum/utxkden)
+cat(v,file=here('texto/utxknum_utxkden.txt'))
 
-1e2*(txknum+utxknum)/(txkden+utxkden)   #10%
-1e2*(txknumy+utxknumy)/(txkdeny+utxkdeny)   #26%
-
+(v <- 1e2*(txknum+utxknum)/(txkden+utxkden))   #10%
+cat(v,file=here('texto/knum_kden.txt'))
+(v <- 1e2*(txknumy+utxknumy)/(txkdeny+utxkdeny))   #26%
+cat(v,file=here('texto/knumy_kdeny.txt'))
 length(cnsdone)
 
 ## show_col(colorblind_pal()(4))
