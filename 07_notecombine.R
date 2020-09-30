@@ -88,7 +88,16 @@ N3[,c('upper','lower'):=NULL]
 N3[,c('val','hs'):=NULL]
 N3[,c('acat','age_name'):=NULL]
 
+
+
+## NA for HIV stuff is zero 
+N3[is.na(H),c('H','H.sd'):=0]
+N3[is.na(haa),haa:=0]
+N3[is.na(hsa),hsa:=0]
+N3[,nacount:=NULL]
+
 N3
+summary(N3)
 
 
 save(N3,file=here('../tmpdata/N3.Rdata'))

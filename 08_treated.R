@@ -100,7 +100,10 @@ N3[!is.finite(alive.t.sd)]
 
 N3 <- merge(N3,lamap[,.(age,acat=acats)],by='age',all.x=TRUE)
 
-
+## adding SAs
+N3[,alive.2 := (S.2m.h * H + S.2m.0 * (1-H)) * value]
+N3[,alive.4 := (S.4m.h * H + S.4m.0 * (1-H)) * value]
+N3[,alive.d := (S.tmh * H + S.tm0 * (1-H)) * value]
 
 ##aggregate over ages/sex assuming value uncor, S, H corr in each country
 u1h <- N3[,.(alive.h=sum(alive.h),
@@ -111,7 +114,8 @@ u2h <- N3[,.(LYS.h=sum(LYS.h),
           by=.(iso3,g_whoregion)]
 
 u1 <- N3[,.(alive.0=sum(alive.0),
-            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
+            alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd),
+            alive.2=sum(alive.2),alive.4=sum(alive.4),alive.d=sum(alive.d)),
          by=.(iso3,g_whoregion)]   #alive
 u2 <- N3[,.(LYS.0=sum(LYS.0),
              LYS.0.sd=Sssumxyz(value,LY.0,1-H,value.sd,LY.0.sd,H.sd)),
@@ -126,16 +130,18 @@ u1[,alive.sd:=sqrt(alive.h.sd^2+alive.0.sd^2)]
 u2[,LYS.sd:=sqrt(LYS.h.sd^2+LYS.0.sd^2)]
 
 summary(u2)
-u1[,see(sum(alive))]
 u2[,see(sum(LYS))]
+u1[,see(sum(alive))]
+u1[,see(sum(alive.2))]
+u1[,see(sum(alive.4))]
+u1[,see(sum(alive.d))]
+
 
 ## ============  figdat =================
-
 
 ## === for table 1
 
 ## --- tx alive
-
 t1r5c <- u1[,.(iso3,value=alive,value.sd=alive.sd)]
 t1r5c[,quantity:='totnewtx2020']
 save(t1r5c,file=here('../figdat/t1r5c.Rdata'))
@@ -145,11 +151,15 @@ t1r5c[value.sd>value,.(iso3,value.sd/value)]
 
 ## regional level
 t1r5 <- u1[,.(value=sum(alive),
+              value.2=sum(alive.2),value.4=sum(alive.4),value.d=sum(alive.d),
               value.sd=Ssum(alive.sd)),
              by=g_whoregion]
 
 tmp <- data.table(g_whoregion='Global',
                   value=t1r5[,sum(value)],
+                  value.2=t1r5[,sum(value.2)],
+                  value.4=t1r5[,sum(value.4)],
+                  value.d=t1r5[,sum(value.d)],
                   value.sd=t1r5[,Ssum(value.sd)])
 t1r5 <- rbind(t1r5,tmp)
 t1r5[,quantity:='totnewtx2020']
@@ -229,9 +239,15 @@ u2h <- N3[year>=2018,.(alive.h=sum(alive.h),
          by=.(iso3,g_whoregion)]   #alive
 
 u1 <- N3[year>=2015,.(alive.0=sum(alive.0),
+                      alive.2=sum(alive.2),
+                      alive.4=sum(alive.4),
+                      alive.d=sum(alive.d),
             alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
          by=.(iso3,g_whoregion)]   #alive
 u2 <- N3[year>=2018,.(alive.0=sum(alive.0),
+                      alive.2=sum(alive.2),
+                      alive.4=sum(alive.4),
+                      alive.d=sum(alive.d),
             alive.0.sd=Sssumxyz(value,S.0,1-H,value.sd,S.0.sd,H.sd)),
          by=.(iso3,g_whoregion)]   #alive
 
@@ -257,6 +273,21 @@ c1b <- rbind(u2[,.(total=sum(alive),total.sd=Ssum(alive.sd)),by=g_whoregion],
 
 c1[,.(see(total),see(total-2*total.sd),see(total+2*total.sd))]
 
+## SAs
+c1sa <- rbind(u1[,.(total.2=sum(alive.2),
+                    total.4=sum(alive.4),
+                    total.d=sum(alive.d)),by=g_whoregion],
+            data.table(g_whoregion='Global',
+                       u1[,.(total.2=sum(alive.2),
+                             total.4=sum(alive.4),
+                             total.d=sum(alive.d))] )  )
+c1bsa <- rbind(u2[,.(total.2=sum(alive.2),
+                    total.4=sum(alive.4),
+                    total.d=sum(alive.d)),by=g_whoregion],
+            data.table(g_whoregion='Global',
+                       u2[,.(total.2=sum(alive.2),
+                             total.4=sum(alive.4),
+                             total.d=sum(alive.d))] )  )
 
 
 ## for pc male in table 2
@@ -374,6 +405,7 @@ cageb <- N3[year>=2018,.(agenow,alive)]
 
 ## save data
 save(c1,file=here("../figdat/c1.Rdata")); save(c1b,file=here("../figdat/c1b.Rdata"))
+save(c1sa,file=here("../figdat/c1sa.Rdata")); save(c1bsa,file=here("../figdat/c1bsa.Rdata"))
 save(c2,file=here("../figdat/c2.Rdata")); save(c2b,file=here("../figdat/c2b.Rdata"))
 save(c4,file=here("../figdat/c4.Rdata")); save(c4b,file=here("../figdat/c4b.Rdata"))
 ## HIV
