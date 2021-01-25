@@ -179,34 +179,10 @@ t1r6[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd
 save(t1r6,file=here('../figdat/t1r6.Rdata')) #untreated survivors
 
 ## LYS
-tmp <- estl[,.(value=sum(LYS),value.sd=Ssum(LYS.sd)),by=.(iso3,g_whoregion,year)]
-tmpc <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)]
-
-t1r8c <- tmp[,.(iso3,value,value.sd)]
-
-t1r8c[,quantity:='LYnewtx2020']
-save(t1r8c,file=here('../figdat/t1r8c.Rdata'))
-
-t1r8c[,summary(1e2*value.sd/value)]
-
-## regional level
-t1r8 <- tmp[,.(value=sum(value),
-              value.sd=Ssum(value.sd)),
-             by=g_whoregion]
-
-tmp <- data.table(g_whoregion='Global',
-                  value=t1r8[,sum(value)],
-                  value.sd=t1r8[,Ssum(value.sd)])
-t1r8 <- rbind(t1r8,tmp)
-t1r8[,quantity:='LYnewtx2020']
-
-t1r8[,.(1e2*value.sd/value,see(value),see(value-2*value.sd),see(value+2*value.sd))]
-
-
 ## untreated LYS
 tmp <- estl[,.(value=sum(LYS),value.sd=Ssum(LYS.sd)),by=.(iso3,g_whoregion,year)] #
 tmpc <- tmp[,.(value=sum(value),value.sd=sum(value.sd)),by=.(iso3,g_whoregion)] #
-t1r9c <- tmp[,.(iso3,value,value.sd)]
+t1r9c <- tmpc[,.(iso3,value,value.sd)]
 t1r9c[,quantity:='LYnewnotx2020']
 
 save(t1r9c,file=here('../figdat/t1r9c.Rdata'))
