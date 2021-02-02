@@ -64,8 +64,8 @@ N3[is.na(value/value0),.(iso3,value,value0)]
 N3 <- merge(N3,TBH,by=c('iso3','year'),all.x=TRUE,all.y=FALSE)
 
 ## merge against HIV data
-lamaps <- merge(lamap,amap,by=c('AgeGrp','acats','age_name'),all.x=TRUE) #TODO issue
-
+## lamaps <- merge(lamap,amap,by=c('AgeGrp','acats','age_name'),all.x=TRUE) #
+lamaps <- merge(lamap,amap,by=c('AgeGrp','acats'),all.x=TRUE)            #age_name no longer there
 
 N3 <- merge(N3,lamaps,by='age',all.x=TRUE)
 names(HH)[2] <- 'sex'
