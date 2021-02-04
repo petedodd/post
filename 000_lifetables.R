@@ -390,6 +390,7 @@ plot(tst$mx,col='blue',type='l')
 lines(tst$mx0,col=1)
 plot(tst$mxh,type='b')
 
+save(HD,file=here('../tmpdata/HD.Rdata'))          #final 
 ## === end HIV stuff
 
 
@@ -512,9 +513,9 @@ for(cn in cnz){
     flg <- cn %in% hivcs
     if(flg){
       ZM0 <- matrix(ncol=length(ymps),nrow=length(magps),
-                    data=HD[iso3=='ZAF' & Sex=='Female',mx0])
+                    data=HD[iso3==cn & Sex==sx,mx0])
       ZMh <- matrix(ncol=length(ymps),nrow=length(magps),
-                    data=HD[iso3=='ZAF' & Sex=='Female',mxh])
+                    data=HD[iso3==cn & Sex==sx,mxh])
     }
     tdf <- PY[,{
       tmp <- getHzhist(year,age,2020,ZM)
